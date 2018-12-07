@@ -2,7 +2,7 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@android:color/white"/>
     <item>
-        <bitmap android:src="@drawable/g_logo"
+        <bitmap android:src="@drawable/linkdump_logo_test"
             android:gravity="center"/>
     </item>
 </layer-list>

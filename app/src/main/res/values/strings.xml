@@ -27,4 +27,15 @@
     <string name="material_calendar_today_button">Today</string>
     <string name="material_calendar_positive_button">OK</string>
     <string name="material_calendar_negative_button">Cancel</string>
+    <string name="group_event">Group Event</string>
+    <string name="task_name">Task Name</string>
+    <string name="course_name">Course Name</string>
+    <string name="description">Description</string>
+    <string name="create_event">Create Event</string>
+    <string name="date_placeholder">1/1/1970</string>
+    <string name="time_placeholder">12:00 AM</string>
+    <string name="event_type">Event Type</string>
+    <string name="can_have_other_events_at_same_time">can have other events at same time?</string>
+    <string name="start_time">Start Time:</string>
+    <string name="end_time">End Time:</string>
 </resources>
