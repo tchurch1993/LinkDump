@@ -3,8 +3,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.linkdump.tchur.ld">
 
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <!--<meta-data-->
+    <!--android:name="com.google.firebase.messaging.default_notification_icon"-->
+    <!--android:resource="@drawable/ic_stat_ic_notification" />-->
+    <!--&lt;!&ndash; Set color used with incoming notification messages. This is used when no color is set for the incoming-->
+    <!--notification message. See README(https://goo.gl/6BKBk7) for more. &ndash;&gt;-->
+    <!--<meta-data-->
+    <!--android:name="com.google.firebase.messaging.default_notification_color"-->
+    <!--android:resource="@color/colorAccent" />-->
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:icon="@mipmap/ic_launcher"
@@ -13,7 +22,17 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
-        <activity android:name=".activities.LoginActivity">
+
+
+        <service android:name=".servies.MyFirebaseMessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <activity
+            android:name=".activities.LoginActivity"
+            android:theme="@style/LinkDumpDark">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -22,10 +41,12 @@
         </activity>
         <activity android:name=".activities.MainActivity" />
         <activity android:name=".activities.SignupActivity" />
-        <activity android:name=".OldGreg.Activities.NewCalendarActivity" />
         <activity android:name=".activities.CreateGroupActivity" />
-        <activity android:name=".activities.ChatActivity" />
-        <activity android:name=".activities.UserGroupsActivity" />
+        <activity
+            android:name=".activities.ChatActivity"
+            android:theme="@style/LinkDumpDark" />
+
+
     </application>
 
 </manifest>

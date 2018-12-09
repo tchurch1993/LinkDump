@@ -71,6 +71,7 @@
             android:layout_below="@+id/their_name"
             android:layout_alignStart="@+id/their_name"
             android:background="@drawable/their_message"
+            android:textColor="@color/common_google_signin_btn_text_light_default"
             android:elevation="2dp"
             android:paddingHorizontal="16dp"
             android:paddingVertical="12dp"

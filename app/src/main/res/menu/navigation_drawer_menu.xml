@@ -5,9 +5,6 @@
             android:id="@+id/create_group"
             android:title="Create Group" />
         <item
-            android:id="@+id/group_chat"
-            android:title="Group Chat" />
-        <item
             android:id="@+id/sign_out"
             android:title="Sign Out" />
     </group>

@@ -38,4 +38,9 @@
     <string name="can_have_other_events_at_same_time">can have other events at same time?</string>
     <string name="start_time">Start Time:</string>
     <string name="end_time">End Time:</string>
+    <string name="default_notification_channel_name" translatable="true">Weather</string>
+    <string name="fcm_message">FCM Message</string>
+    <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
+
+
 </resources>
