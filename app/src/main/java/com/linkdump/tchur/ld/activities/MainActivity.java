@@ -1,13 +1,14 @@
 package com.linkdump.tchur.ld.activities;
 
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -20,9 +21,9 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
@@ -30,7 +31,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.iid.InstanceIdResult;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.adapters.GroupNameAdapter;
 
@@ -50,6 +51,7 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
     private List<String> groupIDs;
     private RecyclerView mRecyclerView;
     private GroupNameAdapter adapter;
+    private String NO_GROUP_STRING = "No Groups Found";
 
 
 
@@ -58,6 +60,8 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
         setTheme(R.style.LinkDumpDark);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
@@ -69,6 +73,18 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
         userGroups = new ArrayList<>();
         groupIDs = new ArrayList<>();
         groupsRef = db.collection("groups");
+        if (getIntent().getExtras() != null) {
+            Log.d("demo", "clicked thingy with extras");
+            for (String key : getIntent().getExtras().keySet()) {
+                Object value = getIntent().getExtras().get(key);
+                Log.d("demo", "Key: " + key + " Value: " + value);
+
+            }
+            Intent intent = new Intent(this, ChatActivity.class);
+            intent.putExtra("groupID", getIntent().getStringExtra("groupId"));
+            startActivity(intent);
+        }
+
         getGroupIDs();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // Create channel to show notifications.
@@ -89,21 +105,18 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
         mRecyclerView.addItemDecoration(dividerItemDecoration);
         mRecyclerView.setAdapter(adapter);
 
-        FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
-            @Override
-            public void onComplete(@NonNull Task<InstanceIdResult> task) {
-                Map<String, Object> data = new HashMap<>();
-                data.put("token", task.getResult().getToken());
-                db.collection("users").document(mAuth.getUid()).set(data, SetOptions.merge()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Log.d("demo", "Successfully updated token in DB");
-                        }
-                    }
-                });
-            }
-        });
+//        FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(task -> {
+//            Map<String, Object> data = new HashMap<>();
+//            data.put("token", task.getResult().getToken());
+//            db.collection("users").document(mAuth.getUid()).set(data, SetOptions.merge()).addOnCompleteListener(new OnCompleteListener<Void>() {
+//                @Override
+//                public void onComplete(@NonNull Task<Void> task) {
+//                    if (task.isSuccessful()) {
+//                        Log.d("demo", "Successfully updated token in DB");
+//                    }
+//                }
+//            });
+//        });
 
         // If a notification message is tapped, any data accompanying the notification
         // message is available in the intent extras. In this sample the launcher
@@ -114,12 +127,7 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
         //
         // Handle possible data accompanying notification message.
         // [START handle_data_extras]
-        if (getIntent().getExtras() != null) {
-            for (String key : getIntent().getExtras().keySet()) {
-                Object value = getIntent().getExtras().get(key);
-                Log.d("demo", "Key: " + key + " Value: " + value);
-            }
-        }
+
 
         //final CalendarView calendar = findViewById(R.id.calendarView2);
         mDrawerLayout = findViewById(R.id.menu_drawer);
@@ -153,14 +161,42 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
                 });
     }
 
+    public void subscriptionHandler() {
+        for (String groupthing : groupIDs) {
+            FirebaseMessaging.getInstance().subscribeToTopic(groupthing);
+
+        }
+    }
+
 
     public void getGroupIDs() {
         userRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 if (task.getResult().exists()) {
+                    FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(task2 -> {
+                        if (task2.isSuccessful()) {
+                            if (!task2.getResult().getToken().equals(task.getResult().get("token"))) {
+                                Map<String, Object> data = new HashMap<>();
+                                data.put("token", task2.getResult().getToken());
+                                db.collection("users").document(mAuth.getUid()).set(data, SetOptions.merge()).addOnCompleteListener(task1 -> {
+                                    if (task1.isSuccessful()) {
+                                        Log.d("demo", "Successfully updated token in DB");
+                                    }
+                                });
+                            } else {
+                                Log.d("demo", "has valid token");
+                            }
+                        }
+                    });
                     List<String> tempGroupIDs;
                     tempGroupIDs = (List<String>) task.getResult().get("groups");
-                    getGroupNames(tempGroupIDs);
+                    if (!(tempGroupIDs == null)) {
+                        getGroupNames(tempGroupIDs);
+                    } else {
+                        userGroups.add(NO_GROUP_STRING);
+                        adapter.notifyDataSetChanged();
+
+                    }
                 }
             }
         });
@@ -170,16 +206,19 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
         groupsRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 for (DocumentSnapshot document : task.getResult()) {
-                    String mID = document.getId();
-                    for (String id : mGroupIDs) {
-                        if (mID.equals(id)) {
-                            groupIDs.add(document.getId());
-                            Log.d("demo", "Inside GroupNames: " + mID);
-                            userGroups.add((String) document.get("groupName"));
+                    if (task.isSuccessful()) {
+                        String mID = document.getId();
+                        for (String id : mGroupIDs) {
+                            if (mID.equals(id)) {
+                                groupIDs.add(document.getId());
+                                Log.d("demo", "Inside GroupNames: " + mID);
+                                userGroups.add((String) document.get("groupName"));
 
+                            }
                         }
                     }
                 }
+                subscriptionHandler();
                 adapter.notifyDataSetChanged();
             }
         });
@@ -213,8 +252,40 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
         for (String mID : groupIDs) {
             Log.d("demo", "Group IDs: " + mID);
         }
-        Intent intent = new Intent(MainActivity.this, ChatActivity.class);
-        intent.putExtra("groupID", groupIDs.get(position));
-        startActivity(intent);
+        if (groupIDs.size() > 0) {
+            Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+            intent.putExtra("groupID", groupIDs.get(position));
+            startActivity(intent);
+        } else {
+            Toast.makeText(this, "Please add a Group", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // This snippet takes the simple approach of using the first returned Google account,
+    // but you can pick any Google account on the device.
+    public String getAccount() {
+        // This call requires the Android GET_ACCOUNTS permission
+        Account[] accounts = AccountManager.get(this /* activity */).
+                getAccountsByType("com.google");
+        if (accounts.length == 0) {
+            return null;
+        }
+        return accounts[0].name;
+    }
+
+    public void getAuthToken() {
+        // [START fcm_get_token]
+        String accountName = getAccount();
+
+        // Initialize the scope using the client ID you got from the Console.
+        final String scope = "596243123444-pql15uql1o7fvt12sfjkfdv0m1ppkkjb.apps.googleusercontent.com";
+
+        String idToken = null;
+        try {
+            idToken = GoogleAuthUtil.getToken(this, accountName, scope);
+        } catch (Exception e) {
+            Log.w("demo", "Exception while getting idToken: " + e);
+        }
+        // [END fcm_get_token]
     }
 }

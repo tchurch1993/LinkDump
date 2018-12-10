@@ -136,6 +136,9 @@ public class CreateGroupActivity extends AppCompatActivity {
         });
     }
 
+    public void subscribeAllMembers(List<String> memberIds) {
+    }
+
     public void addMemberToList(String userID) {
         members.add(userID);
     }

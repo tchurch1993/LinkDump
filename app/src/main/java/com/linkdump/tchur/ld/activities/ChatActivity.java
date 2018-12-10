@@ -2,6 +2,7 @@ package com.linkdump.tchur.ld.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -10,14 +11,18 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.adapters.GroupChatAdapter;
 import com.linkdump.tchur.ld.objects.Message;
+import com.pusher.pushnotifications.PushNotifications;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -41,6 +46,10 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        FirebaseMessaging.getInstance().setAutoInitEnabled(true);
+        PushNotifications.start(this, "02a53d4a-83f9-4e8d-98c7-c7ef7288e445");
+
+
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
         userRef = db.collection("users").document(mAuth.getUid());
@@ -78,7 +87,13 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 sendMessage.put("userName", mAuth.getCurrentUser().getDisplayName());
                 sendMessage.put("sentTime", Calendar.getInstance().getTimeInMillis());
                 db.collection("groups").document(currentGroup)
-                        .collection("messages").add(sendMessage);
+                        .collection("messages").add(sendMessage).addOnCompleteListener(new OnCompleteListener<DocumentReference>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentReference> task) {
+                        if (task.isSuccessful()) {
+                        }
+                    }
+                });
                 chatEditText.setText("");
             }
         });
