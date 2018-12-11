@@ -7,6 +7,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -61,7 +62,6 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
@@ -80,9 +80,21 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
                 Log.d("demo", "Key: " + key + " Value: " + value);
 
             }
-            Intent intent = new Intent(this, ChatActivity.class);
-            intent.putExtra("groupID", getIntent().getStringExtra("groupId"));
-            startActivity(intent);
+            if (!getIntent().getStringExtra("groupId").isEmpty()) {
+                Log.d("demo", "inside groupId Intent thing: " + getIntent().getStringExtra("groupId"));
+
+                Intent intent = new Intent(this, ChatActivity.class);
+                intent.putExtra("groupID", getIntent().getStringExtra("groupId"));
+                startActivity(intent);
+            } else {
+                if (!getIntent().getStringExtra("link").isEmpty()) {
+                    Log.d("demo", "inside link Intent thing: " + getIntent().getStringExtra("link"));
+                    String url = getIntent().getStringExtra("link");
+                    Intent i = new Intent(Intent.ACTION_VIEW);
+                    i.setData(Uri.parse(url));
+                    startActivity(i);
+                }
+            }
         }
 
         getGroupIDs();

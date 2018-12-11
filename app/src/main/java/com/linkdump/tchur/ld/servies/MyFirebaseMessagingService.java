@@ -160,13 +160,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 PendingIntent.FLAG_ONE_SHOT);
         String channelId = getString(R.string.default_notification_channel_id);
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        Uri sound = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.wednesday);
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this, channelId)
                         .setSmallIcon(R.drawable.linkdump_logo_test)
                         .setContentTitle(getString(R.string.fcm_message))
                         .setContentText(messageBody)
                         .setAutoCancel(true)
-                        .setSound(defaultSoundUri)
+                        .setSound(sound)
                         .setContentIntent(pendingIntent);
 
         NotificationManager notificationManager =

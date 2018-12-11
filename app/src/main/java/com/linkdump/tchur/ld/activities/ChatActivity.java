@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -95,6 +96,21 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                     }
                 });
                 chatEditText.setText("");
+            }
+        });
+        chatEditText.setOnKeyListener(new View.OnKeyListener() {
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                    switch (keyCode) {
+                        case KeyEvent.KEYCODE_DPAD_CENTER:
+                        case KeyEvent.KEYCODE_ENTER:
+                            imageButton.callOnClick();
+                            return true;
+                        default:
+                            break;
+                    }
+                }
+                return false;
             }
         });
     }
