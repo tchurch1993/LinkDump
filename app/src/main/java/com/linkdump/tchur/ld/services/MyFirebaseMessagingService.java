@@ -1,6 +1,6 @@
 
 
-package com.linkdump.tchur.ld.servies;
+package com.linkdump.tchur.ld.services;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;

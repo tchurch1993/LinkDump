@@ -55,12 +55,21 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
     private String NO_GROUP_STRING = "No Groups Found";
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.LinkDumpDark);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Create channel to show notifications.
+            String channelId = getString(R.string.default_notification_channel_id);
+            String channelName = "chat";
+            NotificationManager notificationManager =
+                    getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(new NotificationChannel(channelId,
+                    channelName, NotificationManager.IMPORTANCE_LOW));
+        }
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -101,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // Create channel to show notifications.
             String channelId = getString(R.string.default_notification_channel_id);
-            String channelName = getString(R.string.default_notification_channel_name);
+            String channelName = "chat";
             NotificationManager notificationManager =
                     getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(new NotificationChannel(channelId,

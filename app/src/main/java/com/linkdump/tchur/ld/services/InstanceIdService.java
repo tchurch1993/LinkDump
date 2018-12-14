@@ -1,4 +1,4 @@
-package com.linkdump.tchur.ld.servies;
+package com.linkdump.tchur.ld.services;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
