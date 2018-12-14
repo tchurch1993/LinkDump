@@ -101,6 +101,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         }
         sendRegistrationToServer(token);
     }
+
+
     // [END on_new_token]
 
     /**
