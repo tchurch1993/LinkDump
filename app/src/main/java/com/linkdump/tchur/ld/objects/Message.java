@@ -1,6 +1,8 @@
 package com.linkdump.tchur.ld.objects;
 
-public class Message {
+import android.support.annotation.NonNull;
+
+public class Message implements Comparable {
     private String message, user, userName;
     private long sentTime;
     private boolean isUser;
@@ -13,6 +15,7 @@ public class Message {
         user = mUser;
         sentTime = mSentTime;
     }
+
 
     public String getUserName(){
         return userName;
@@ -52,5 +55,10 @@ public class Message {
 
     public void setSentTime(long sentTime) {
         this.sentTime = sentTime;
+    }
+
+    @Override
+    public int compareTo(@NonNull Object o) {
+        return Long.compare(this.sentTime, ((Message) o).sentTime);
     }
 }

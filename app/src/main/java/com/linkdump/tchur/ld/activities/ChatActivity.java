@@ -2,7 +2,7 @@ package com.linkdump.tchur.ld.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -12,21 +12,19 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.messaging.FirebaseMessaging;
 import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.adapters.GroupChatAdapter;
 import com.linkdump.tchur.ld.objects.Message;
-import com.pusher.pushnotifications.PushNotifications;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,8 +45,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
-        FirebaseMessaging.getInstance().setAutoInitEnabled(true);
-        PushNotifications.start(this, "02a53d4a-83f9-4e8d-98c7-c7ef7288e445");
+        clearNotifications();
 
 
         db = FirebaseFirestore.getInstance();
@@ -58,6 +55,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         Intent intent = getIntent();
         currentGroup = intent.getStringExtra("groupID");
 
+
         events = new ArrayList<>();
         userGroups = new ArrayList<>();
         mRecyclerView = findViewById(R.id.chat_recyclerview);
@@ -66,9 +64,6 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         mRecyclerView.setLayoutManager(mLayoutManager);
         adapter = new GroupChatAdapter(this, messages);
         adapter.setClickListener(this);
-//        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mRecyclerView.getContext(),
-//                mLayoutManager.getOrientation());
-//        mRecyclerView.addItemDecoration(dividerItemDecoration);
         adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onItemRangeInserted(int positionStart, int itemCount) {
@@ -80,6 +75,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
 
         ImageButton imageButton = findViewById(R.id.imageButton);
         final EditText chatEditText = findViewById(R.id.chat_message_edit_text);
+
         imageButton.setOnClickListener(view -> {
             if (!chatEditText.getText().toString().equals("")) {
                 Map<String, Object> sendMessage = new HashMap<>();
@@ -88,35 +84,44 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 sendMessage.put("userName", mAuth.getCurrentUser().getDisplayName());
                 sendMessage.put("sentTime", Calendar.getInstance().getTimeInMillis());
                 db.collection("groups").document(currentGroup)
-                        .collection("messages").add(sendMessage).addOnCompleteListener(new OnCompleteListener<DocumentReference>() {
-                    @Override
-                    public void onComplete(@NonNull Task<DocumentReference> task) {
-                        if (task.isSuccessful()) {
-                        }
+                        .collection("messages").add(sendMessage).addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        adapter.notifyDataSetChanged();
                     }
                 });
                 chatEditText.setText("");
             }
         });
-        chatEditText.setOnKeyListener(new View.OnKeyListener() {
-            public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if (event.getAction() == KeyEvent.ACTION_DOWN) {
-                    switch (keyCode) {
-                        case KeyEvent.KEYCODE_DPAD_CENTER:
-                        case KeyEvent.KEYCODE_ENTER:
-                            imageButton.callOnClick();
-                            return true;
-                        default:
-                            break;
-                    }
+        chatEditText.setOnKeyListener((v, keyCode, event) -> {
+            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                switch (keyCode) {
+                    case KeyEvent.KEYCODE_DPAD_CENTER:
+                    case KeyEvent.KEYCODE_ENTER:
+                        imageButton.callOnClick();
+                        return true;
+                    default:
+                        break;
                 }
-                return false;
             }
+            return false;
         });
+
+//        CharSequence message = getMessageText(getIntent());
+//        if (message != null){
+//            chatEditText.setText(message);
+//            imageButton.callOnClick();
+//            Notification repliedNotification = new Notification.Builder(getApplicationContext(), "Group Chat")
+//                    .setSmallIcon(R.drawable.ic_link_dump)
+//                    .setContentText(message)
+//                    .build();
+//
+//            NotificationManagerCompat notificationManager1 = NotificationManagerCompat.from(this);
+//            notificationManager1.notify(NOTIFICATION_ID, repliedNotification);
+//        }
     }
 
     public void groupChatListener(String currentGroup) {
-        db.collection("groups").document(currentGroup).collection("messages").orderBy("sentTime").limit(100).addSnapshotListener((queryDocumentSnapshots, e) -> {
+        db.collection("groups").document(currentGroup).collection("messages").orderBy("sentTime", Query.Direction.DESCENDING).limit(100).addSnapshotListener((queryDocumentSnapshots, e) -> {
             if (e != null) {
                 Log.w("demo", "Listener Failed", e);
                 return;
@@ -134,12 +139,27 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 messages.add(tempMessage);
                 events.add(mDoc.getString("message"));
             }
+            Collections.sort(messages);
             adapter.notifyItemInserted(adapter.getItemCount() - 1);
+            adapter.notifyDataSetChanged();
         });
     }
+
+//    private CharSequence getMessageText(Intent intent) {
+//        Bundle remoteInput = RemoteInput.getResultsFromIntent(intent);
+//        if (remoteInput != null) {
+//            return remoteInput.getCharSequence(KEY_TEXT_REPLY);
+//        }
+//        return null;
+//    }
 
     @Override
     public void onItemClick(View view, int position) {
 
+    }
+
+    public void clearNotifications() {
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
+        notificationManager.cancel(0);
     }
 }

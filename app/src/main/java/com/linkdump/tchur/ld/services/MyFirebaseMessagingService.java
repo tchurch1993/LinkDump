@@ -2,6 +2,7 @@
 
 package com.linkdump.tchur.ld.services;
 
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -11,6 +12,8 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.Person;
+import android.support.v4.app.RemoteInput;
 import android.util.Log;
 
 import com.firebase.jobdispatcher.FirebaseJobDispatcher;
@@ -31,6 +34,9 @@ import java.util.Objects;
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "demo";
+    public static final String KEY_TEXT_REPLY = "key_text_reply";
+    public static final int NOTIFICATION_ID = 101;
+
 
     /**
      * Called when message is received.
@@ -62,18 +68,24 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         // Check if message contains a data payload.
         if (remoteMessage.getData().size() > 0) {
+            FirebaseAuth mAuth = FirebaseAuth.getInstance();
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
 
             Map<String, String> data = remoteMessage.getData();
-            sendNotification(data.get("body"));
+            Log.d("demo", data.get("senderId") + " : " + mAuth.getCurrentUser().getUid());
+            if (data.get("click_action") != null && data.get("click_action").equals("UPDATE")) {
+                buildUpdateNotification();
+                return;
+            }
+            if (!data.get("senderId").equals(mAuth.getCurrentUser().getUid())) {
+                sendGroupChatNotification(data);
+            }
         }
 
         // Check if message contains a notification payload.
         if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
         }
-
-        sendNotification("test Notify");
 
         // Also if you intend on generating your own notifications as a result of a received FCM
         // message, here is where that should be initiated. See sendNotification method below.
@@ -152,37 +164,76 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     /**
      * Create and show a simple notification containing the received FCM message.
      *
-     * @param messageBody FCM message body received.
+     * @param data FCM message body received.
      */
-    private void sendNotification(String messageBody) {
+    private void sendGroupChatNotification(Map<String, String> data) {
+        String groupId = data.get("groupId");
+        String groupReqCode = data.get("groupReqCode");
+        assert groupReqCode != null;
+        int intGroupReCode = Integer.parseInt(groupReqCode);
+        Log.d("demo", "req code from FCM: " + groupReqCode);
+
         Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("groupID", groupId);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         Log.d("demo", "inside sendNotification");
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
                 PendingIntent.FLAG_ONE_SHOT);
-        String channelId = getString(R.string.default_notification_channel_id);
+        String channelId = "Group Chat";
+
+        RemoteInput remoteInput = new RemoteInput.Builder(KEY_TEXT_REPLY).setLabel("Reply").build();
+
+        Person person = new Person.Builder().setName(data.get("sender")).build();
+        NotificationCompat.MessagingStyle.Message message = new NotificationCompat.MessagingStyle.Message(data.get("message"), System.currentTimeMillis(), person);
+
+        Intent replyIntent = new Intent(this, NotificationBroadcastReceiver.class);
+        replyIntent.putExtra("groupID", groupId);
+        replyIntent.putExtra("message", message.getExtras());
+        replyIntent.putExtra("reqCode", groupReqCode);
+
+        PendingIntent replyPendingIntent = PendingIntent.getBroadcast(this, intGroupReCode, replyIntent, 0);
+        NotificationCompat.Action action = new NotificationCompat.Action.Builder(R.drawable.ic_link_dump, "Reply",
+                replyPendingIntent).addRemoteInput(remoteInput).setAllowGeneratedReplies(true).build();
+
+        NotificationCompat.MessagingStyle messagingStyle =
+                new NotificationCompat.MessagingStyle("Me");
+        messagingStyle.setConversationTitle(data.get("title"));
+
+        messagingStyle.addMessage(message);
+
+
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        Uri sound = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.wednesday);
+        Uri sound = Uri.parse("android.resource://" + getApplicationContext().getPackageName() + "/" + R.raw.wednesday);
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this, channelId)
-                        .setSmallIcon(R.drawable.linkdump_logo_test)
-                        .setContentTitle(getString(R.string.fcm_message))
-                        .setContentText(messageBody)
+                        .setSmallIcon(R.drawable.ic_link_dump)
+                        .setStyle(messagingStyle)
+                        .setColor(getResources().getColor(R.color.colorPrimary, getTheme()))
+                        .setContentTitle(data.get("title"))
+                        .setContentText(data.get("message"))
+                        .addAction(action)
                         .setAutoCancel(true)
                         .setSound(sound)
+                        .setDefaults(Notification.FLAG_ONLY_ALERT_ONCE)
                         .setContentIntent(pendingIntent);
 
         NotificationManager notificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
+
         // Since android Oreo notification channel is needed.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(channelId,
-                    "Channel human readable title",
-                    NotificationManager.IMPORTANCE_DEFAULT);
+                    "test",
+                    NotificationManager.IMPORTANCE_LOW);
             notificationManager.createNotificationChannel(channel);
         }
 
-        notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
+        notificationManager.notify(intGroupReCode, notificationBuilder.build());
+        Log.d("demo", "showing notification");
+    }
+
+    public void buildUpdateNotification() {
+
     }
 }

@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class CreateGroupActivity extends AppCompatActivity {
     private FirebaseFirestore db;
@@ -87,6 +88,9 @@ public class CreateGroupActivity extends AppCompatActivity {
     public void addGroupToDB(final List<String> memberIDs) {
         memberIDs.add(mAuth.getUid());
         data.put("members", memberIDs);
+        Random rand = new Random();
+        int reqCode = rand.nextInt();
+        data.put("groupReqCode", reqCode);
         db.collection("groups").add(data).addOnCompleteListener(task -> db.runTransaction((Transaction.Function<Void>) transaction -> {
             if (task.isSuccessful()) {
 

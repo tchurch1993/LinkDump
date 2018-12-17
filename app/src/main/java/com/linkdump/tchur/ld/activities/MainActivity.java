@@ -1,8 +1,6 @@
 package com.linkdump.tchur.ld.activities;
 
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Intent;
@@ -11,6 +9,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -24,7 +23,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
@@ -60,16 +58,17 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
         setTheme(R.style.LinkDumpDark);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        clearNotifications();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // Create channel to show notifications.
-            String channelId = getString(R.string.default_notification_channel_id);
-            String channelName = "chat";
-            NotificationManager notificationManager =
-                    getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(new NotificationChannel(channelId,
-                    channelName, NotificationManager.IMPORTANCE_LOW));
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            // Create channel to show notifications.
+//            String channelId = "Group Chat";
+//            String channelName = "Group Chat";
+//            NotificationManager notificationManager =
+//                    getSystemService(NotificationManager.class);
+//            notificationManager.createNotificationChannel(new NotificationChannel(channelId,
+//                    channelName, NotificationManager.IMPORTANCE_HIGH));
+//        }
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -89,14 +88,15 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
                 Log.d("demo", "Key: " + key + " Value: " + value);
 
             }
-            if (!getIntent().getStringExtra("groupId").isEmpty()) {
-                Log.d("demo", "inside groupId Intent thing: " + getIntent().getStringExtra("groupId"));
+            if (getIntent().getStringExtra("groupID") != null) {
+                Log.d("demo", "inside groupId Intent thing: " + getIntent().getStringExtra("groupID"));
 
                 Intent intent = new Intent(this, ChatActivity.class);
-                intent.putExtra("groupID", getIntent().getStringExtra("groupId"));
+                intent.putExtra("groupID", getIntent().getStringExtra("groupID"));
                 startActivity(intent);
             } else {
-                if (!getIntent().getStringExtra("link").isEmpty()) {
+                Log.d("demo", "in else of getIntent checks");
+                if (getIntent().getStringExtra("link") != null) {
                     Log.d("demo", "inside link Intent thing: " + getIntent().getStringExtra("link"));
                     String url = getIntent().getStringExtra("link");
                     Intent i = new Intent(Intent.ACTION_VIEW);
@@ -126,31 +126,7 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
         mRecyclerView.addItemDecoration(dividerItemDecoration);
         mRecyclerView.setAdapter(adapter);
 
-//        FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(task -> {
-//            Map<String, Object> data = new HashMap<>();
-//            data.put("token", task.getResult().getToken());
-//            db.collection("users").document(mAuth.getUid()).set(data, SetOptions.merge()).addOnCompleteListener(new OnCompleteListener<Void>() {
-//                @Override
-//                public void onComplete(@NonNull Task<Void> task) {
-//                    if (task.isSuccessful()) {
-//                        Log.d("demo", "Successfully updated token in DB");
-//                    }
-//                }
-//            });
-//        });
 
-        // If a notification message is tapped, any data accompanying the notification
-        // message is available in the intent extras. In this sample the launcher
-        // intent is fired when the notification is tapped, so any accompanying data would
-        // be handled here. If you want a different intent fired, set the click_action
-        // field of the notification message to the desired intent. The launcher intent
-        // is used when no click_action is specified.
-        //
-        // Handle possible data accompanying notification message.
-        // [START handle_data_extras]
-
-
-        //final CalendarView calendar = findViewById(R.id.calendarView2);
         mDrawerLayout = findViewById(R.id.menu_drawer);
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(
@@ -169,6 +145,12 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
                             Intent intent1 = new Intent(MainActivity.this, LoginActivity.class);
                             startActivity(intent1);
                             finish();
+                            return true;
+                        case R.id.update:
+                            Intent i = new Intent(Intent.ACTION_VIEW);
+                            String url = "https://drive.google.com/open?id=1UgIoA5YPAs6j_ZHjONHypnocVahOv1OX";
+                            i.setData(Uri.parse(url));
+                            startActivity(i);
                             return true;
                         case R.id.create_group:
                             startActivity(new Intent(MainActivity.this, CreateGroupActivity.class));
@@ -269,6 +251,12 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        clearNotifications();
+    }
+
+    @Override
     public void onItemClick(View view, int position) {
         for (String mID : groupIDs) {
             Log.d("demo", "Group IDs: " + mID);
@@ -282,31 +270,9 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
         }
     }
 
-    // This snippet takes the simple approach of using the first returned Google account,
-    // but you can pick any Google account on the device.
-    public String getAccount() {
-        // This call requires the Android GET_ACCOUNTS permission
-        Account[] accounts = AccountManager.get(this /* activity */).
-                getAccountsByType("com.google");
-        if (accounts.length == 0) {
-            return null;
-        }
-        return accounts[0].name;
-    }
 
-    public void getAuthToken() {
-        // [START fcm_get_token]
-        String accountName = getAccount();
-
-        // Initialize the scope using the client ID you got from the Console.
-        final String scope = "596243123444-pql15uql1o7fvt12sfjkfdv0m1ppkkjb.apps.googleusercontent.com";
-
-        String idToken = null;
-        try {
-            idToken = GoogleAuthUtil.getToken(this, accountName, scope);
-        } catch (Exception e) {
-            Log.w("demo", "Exception while getting idToken: " + e);
-        }
-        // [END fcm_get_token]
+    public void clearNotifications() {
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
+        notificationManager.cancelAll();
     }
 }
