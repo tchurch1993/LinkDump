@@ -33,7 +33,9 @@ import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.adapters.GroupNameAdapter;
+import com.linkdump.tchur.ld.utils.MessageHistoryUtil;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -90,9 +92,15 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
             }
             if (getIntent().getStringExtra("groupID") != null) {
                 Log.d("demo", "inside groupId Intent thing: " + getIntent().getStringExtra("groupID"));
+                String groupId = getIntent().getStringExtra("groupID");
+                try {
+                    MessageHistoryUtil.clearGroupHistory(this, groupId);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 Intent intent = new Intent(this, ChatActivity.class);
-                intent.putExtra("groupID", getIntent().getStringExtra("groupID"));
+                intent.putExtra("groupID", groupId);
                 startActivity(intent);
             } else {
                 Log.d("demo", "in else of getIntent checks");

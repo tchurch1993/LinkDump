@@ -1,6 +1,7 @@
 package com.linkdump.tchur.ld.activities;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -21,6 +22,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.adapters.GroupChatAdapter;
 import com.linkdump.tchur.ld.objects.Message;
+import com.linkdump.tchur.ld.services.MyFirebaseMessagingService;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -40,6 +42,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
     private List<Message> messages;
     private DocumentReference userRef;
     private List<String> userGroups;
+    private SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,13 +51,18 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         clearNotifications();
 
 
+
+
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
         userRef = db.collection("users").document(mAuth.getUid());
         messages = new ArrayList<>();
         Intent intent = getIntent();
         currentGroup = intent.getStringExtra("groupID");
+        prefs = this.getSharedPreferences(
+                getPackageName(), MODE_PRIVATE);
 
+        prefs.edit().putString("currentGroup", currentGroup).apply();
 
         events = new ArrayList<>();
         userGroups = new ArrayList<>();
@@ -86,7 +94,6 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 db.collection("groups").document(currentGroup)
                         .collection("messages").add(sendMessage).addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        adapter.notifyDataSetChanged();
                     }
                 });
                 chatEditText.setText("");
@@ -140,8 +147,9 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 events.add(mDoc.getString("message"));
             }
             Collections.sort(messages);
-            adapter.notifyItemInserted(adapter.getItemCount() - 1);
+//            adapter.notifyItemInserted(adapter.getItemCount() - 1);
             adapter.notifyDataSetChanged();
+            adapter.notifyItemInserted(adapter.getItemCount() - 1);
         });
     }
 
@@ -156,6 +164,24 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
     @Override
     public void onItemClick(View view, int position) {
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        prefs.edit().putString("currentGroup", currentGroup).apply();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        prefs.edit().putString("currentGroup", "NONE").apply();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        prefs.edit().putString("currentGroup", "NONE").apply();
     }
 
     public void clearNotifications() {

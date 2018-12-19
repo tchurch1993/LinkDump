@@ -29,6 +29,7 @@
             android:value="@string/default_notification_channel_id" />
 
         <receiver android:name=".services.NotificationBroadcastReceiver" />
+        <receiver android:name=".services.DeleteIntentBroadcastReceiver" />
 
 
         <activity

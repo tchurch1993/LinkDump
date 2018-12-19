@@ -1,8 +1,11 @@
 package com.linkdump.tchur.ld.objects;
 
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
-public class Message implements Comparable {
+import java.io.Serializable;
+
+public class Message implements Comparable, Serializable {
     private String message, user, userName;
     private long sentTime;
     private boolean isUser;

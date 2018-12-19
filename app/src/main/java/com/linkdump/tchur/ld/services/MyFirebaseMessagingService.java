@@ -8,6 +8,8 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.media.AudioAttributes;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -26,16 +28,22 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.activities.MainActivity;
+import com.linkdump.tchur.ld.objects.Message;
+import com.linkdump.tchur.ld.utils.MessageHistoryUtil;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
-    private static final String TAG = "demo";
+    private static final String TAG = "MyFirebaseMessagingService";
     public static final String KEY_TEXT_REPLY = "key_text_reply";
     public static final int NOTIFICATION_ID = 101;
+    public String foregroundGroup;
+    private SharedPreferences prefs;
 
 
     /**
@@ -65,6 +73,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // TODO(developer): Handle FCM messages here.
         // Not getting messages here? See why this may be: https://goo.gl/39bRNJ
         Log.d(TAG, "From: " + remoteMessage.getTo());
+        prefs = this.getSharedPreferences(
+                getPackageName(), MODE_PRIVATE);
 
         // Check if message contains a data payload.
         if (remoteMessage.getData().size() > 0) {
@@ -72,13 +82,28 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
 
             Map<String, String> data = remoteMessage.getData();
-            Log.d("demo", data.get("senderId") + " : " + mAuth.getCurrentUser().getUid());
+
+            foregroundGroup = prefs.getString("currentGroup", "NONE");
+            if (!foregroundGroup.equals("NONE")) {
+                Log.d(TAG, "foregroundGroupId is: " + foregroundGroup);
+                Log.d(TAG, "groupId is: " + data.get("groupId"));
+                if (foregroundGroup.equals(data.get("groupId"))) {
+                    Log.d(TAG, "not showing notification cause in same group as notification");
+                    return;
+                }
+            }
+            Log.d(TAG, data.get("senderId") + " : " + mAuth.getCurrentUser().getUid());
             if (data.get("click_action") != null && data.get("click_action").equals("UPDATE")) {
                 buildUpdateNotification();
                 return;
             }
+
             if (!data.get("senderId").equals(mAuth.getCurrentUser().getUid())) {
-                sendGroupChatNotification(data);
+                try {
+                    sendGroupChatNotification(data);
+                } catch (IOException | ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
@@ -153,12 +178,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         data.put("token", token);
         db.collection("users").document(Objects.requireNonNull(mAuth.getUid())).set(data, SetOptions.merge()).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                Log.d("demo", "successfully pushed token");
+                Log.d(TAG, "successfully pushed token");
             } else {
-                Log.d("demo", "token failed to add to DB");
+                Log.d(TAG, "token failed to add to DB");
             }
         });
-        Log.d("demo", token);
+        Log.d(TAG, token);
     }
 
     /**
@@ -166,25 +191,38 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      *
      * @param data FCM message body received.
      */
-    private void sendGroupChatNotification(Map<String, String> data) {
+    private void sendGroupChatNotification(Map<String, String> data) throws IOException, ClassNotFoundException {
         String groupId = data.get("groupId");
         String groupReqCode = data.get("groupReqCode");
+        String sentMessage = data.get("message");
+        String sender = data.get("sender");
+        Long sentTime = Long.parseLong(data.get("sentTime"));
         assert groupReqCode != null;
         int intGroupReCode = Integer.parseInt(groupReqCode);
-        Log.d("demo", "req code from FCM: " + groupReqCode);
+        Log.d(TAG, "req code from FCM: " + groupReqCode);
 
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra("groupID", groupId);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        Log.d("demo", "inside sendNotification");
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
+        Log.d(TAG, "inside sendNotification");
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, intGroupReCode /* Request code */, intent,
                 PendingIntent.FLAG_ONE_SHOT);
         String channelId = "Group Chat";
 
         RemoteInput remoteInput = new RemoteInput.Builder(KEY_TEXT_REPLY).setLabel("Reply").build();
 
-        Person person = new Person.Builder().setName(data.get("sender")).build();
-        NotificationCompat.MessagingStyle.Message message = new NotificationCompat.MessagingStyle.Message(data.get("message"), System.currentTimeMillis(), person);
+        Person person = new Person.Builder().setName(sender).build();
+        NotificationCompat.MessagingStyle.Message message = new NotificationCompat.MessagingStyle.Message(sentMessage, sentTime, person);
+        Log.d(TAG, sender);
+        Message messageHistory = new Message();
+        messageHistory.setMessage(sentMessage);
+        messageHistory.setSentTime(sentTime);
+        messageHistory.setUserName(sender);
+        try {
+            MessageHistoryUtil.groupMessageNotificationHistory(this, groupId, messageHistory);
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
 
         Intent replyIntent = new Intent(this, NotificationBroadcastReceiver.class);
         replyIntent.putExtra("groupID", groupId);
@@ -192,18 +230,35 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         replyIntent.putExtra("reqCode", groupReqCode);
 
         PendingIntent replyPendingIntent = PendingIntent.getBroadcast(this, intGroupReCode, replyIntent, 0);
+
+        Intent deleteIntent = new Intent(this, DeleteIntentBroadcastReceiver.class);
+        deleteIntent.putExtra("groupId", groupId);
+        PendingIntent deletePendingIntent = PendingIntent.getBroadcast(this, 0, deleteIntent, 0);
         NotificationCompat.Action action = new NotificationCompat.Action.Builder(R.drawable.ic_link_dump, "Reply",
                 replyPendingIntent).addRemoteInput(remoteInput).setAllowGeneratedReplies(true).build();
 
+        Person me = new Person.Builder().setName("Me").build();
+
         NotificationCompat.MessagingStyle messagingStyle =
-                new NotificationCompat.MessagingStyle("Me");
-        messagingStyle.setConversationTitle(data.get("title"));
-
-        messagingStyle.addMessage(message);
-
+                new NotificationCompat.MessagingStyle(me);
+        messagingStyle.setConversationTitle(data.get("title"))
+                .setGroupConversation(true);
+        ArrayList<NotificationCompat.MessagingStyle.Message> messagesHistory = new ArrayList<>();
+        try {
+            messagesHistory = MessageHistoryUtil.convertToMessagesCompat(this, groupId);
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        if (!messagesHistory.isEmpty()) {
+            for (NotificationCompat.MessagingStyle.Message m : messagesHistory) {
+                messagingStyle.addMessage(m);
+            }
+        } else {
+            messagingStyle.addMessage(message);
+        }
 
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        Uri sound = Uri.parse("android.resource://" + getApplicationContext().getPackageName() + "/" + R.raw.wednesday);
+        Uri sound = Uri.parse("android.resource://" + this.getPackageName() + "/" + R.raw.wednesday);
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this, channelId)
                         .setSmallIcon(R.drawable.ic_link_dump)
@@ -212,8 +267,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         .setContentTitle(data.get("title"))
                         .setContentText(data.get("message"))
                         .addAction(action)
+                        .setOnlyAlertOnce(true)
+                        .setDeleteIntent(deletePendingIntent)
                         .setAutoCancel(true)
-                        .setSound(sound)
+                        .setSound(defaultSoundUri)
                         .setDefaults(Notification.FLAG_ONLY_ALERT_ONCE)
                         .setContentIntent(pendingIntent);
 
@@ -225,12 +282,16 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(channelId,
                     "test",
-                    NotificationManager.IMPORTANCE_LOW);
+                    NotificationManager.IMPORTANCE_HIGH);
+//            AudioAttributes attributes = new AudioAttributes.Builder()
+//                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+//                    .build();
+//            channel.setSound(sound, attributes);
             notificationManager.createNotificationChannel(channel);
         }
 
         notificationManager.notify(intGroupReCode, notificationBuilder.build());
-        Log.d("demo", "showing notification");
+        Log.d(TAG, "showing notification");
     }
 
     public void buildUpdateNotification() {
