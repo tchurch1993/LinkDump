@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -21,8 +22,10 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.adapters.GroupChatAdapter;
+import com.linkdump.tchur.ld.adapters.NewGroupChatAdapter;
 import com.linkdump.tchur.ld.objects.Message;
 import com.linkdump.tchur.ld.services.MyFirebaseMessagingService;
+import com.linkdump.tchur.ld.utils.RichLinkUtil;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -31,10 +34,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.ItemClickListener {
+public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.ItemClickListener, NewGroupChatAdapter.ItemClickListener {
 
     private RecyclerView mRecyclerView;
-    private GroupChatAdapter adapter;
+    private NewGroupChatAdapter adapter;
     private ArrayList<String> events;
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
@@ -43,14 +46,13 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
     private DocumentReference userRef;
     private List<String> userGroups;
     private SharedPreferences prefs;
+    private LinearLayoutManager mLayoutManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
         clearNotifications();
-
-
 
 
         db = FirebaseFirestore.getInstance();
@@ -67,10 +69,10 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         events = new ArrayList<>();
         userGroups = new ArrayList<>();
         mRecyclerView = findViewById(R.id.chat_recyclerview);
-        final LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
+        mLayoutManager = new LinearLayoutManager(this);
         mLayoutManager.setStackFromEnd(true);
         mRecyclerView.setLayoutManager(mLayoutManager);
-        adapter = new GroupChatAdapter(this, messages);
+        adapter = new NewGroupChatAdapter(this, messages);
         adapter.setClickListener(this);
         adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
@@ -85,6 +87,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         final EditText chatEditText = findViewById(R.id.chat_message_edit_text);
 
         imageButton.setOnClickListener(view -> {
+            RichLinkUtil.test(this, "https://www.imgur.com");
             if (!chatEditText.getText().toString().equals("")) {
                 Map<String, Object> sendMessage = new HashMap<>();
                 sendMessage.put("message", chatEditText.getText() + "");
@@ -128,7 +131,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
     }
 
     public void groupChatListener(String currentGroup) {
-        db.collection("groups").document(currentGroup).collection("messages").orderBy("sentTime", Query.Direction.DESCENDING).limit(100).addSnapshotListener((queryDocumentSnapshots, e) -> {
+        db.collection("groups").document(currentGroup).collection("messages").orderBy("sentTime", Query.Direction.DESCENDING).limit(25).addSnapshotListener((queryDocumentSnapshots, e) -> {
             if (e != null) {
                 Log.w("demo", "Listener Failed", e);
                 return;
@@ -138,7 +141,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 QueryDocumentSnapshot mDoc = doc.getDocument();
                 Log.d("demo", mDoc.get("message") + "");
                 Message tempMessage = mDoc.toObject(Message.class);
-                if (!tempMessage.getUser().equals(mAuth.getUid())){
+                if (!tempMessage.getUser().equals(mAuth.getUid())) {
                     tempMessage.setIsUser(false);
                 } else {
                     tempMessage.setIsUser(true);
@@ -147,9 +150,9 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 events.add(mDoc.getString("message"));
             }
             Collections.sort(messages);
-//            adapter.notifyItemInserted(adapter.getItemCount() - 1);
             adapter.notifyDataSetChanged();
-            adapter.notifyItemInserted(adapter.getItemCount() - 1);
+//            adapter.notifyItemInserted(adapter.getItemCount() - 1);
+            mLayoutManager.scrollToPosition(messages.size() - 1);
         });
     }
 

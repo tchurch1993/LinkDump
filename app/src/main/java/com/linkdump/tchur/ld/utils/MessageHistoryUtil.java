@@ -68,6 +68,7 @@ public final class MessageHistoryUtil {
     public static ArrayList<NotificationCompat.MessagingStyle.Message> convertToMessagesCompat(Context context, String groupId) throws IOException, ClassNotFoundException {
         ArrayList<Message> messages = (ArrayList<Message>) readMessages(context,groupId);
         ArrayList<NotificationCompat.MessagingStyle.Message> messagesCompat = new ArrayList<>();
+        Collections.sort(messages);
         for (Message m : messages){
             Log.d(TAG, "name of sender: " + m.getUserName());
             Person person = new Person.Builder().setName(m.getUserName()).build();
