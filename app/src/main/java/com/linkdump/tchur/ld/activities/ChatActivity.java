@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.style.URLSpan;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -17,16 +18,21 @@ import android.widget.ImageButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.SetOptions;
 import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.adapters.GroupChatAdapter;
 import com.linkdump.tchur.ld.adapters.NewGroupChatAdapter;
 import com.linkdump.tchur.ld.objects.Message;
 import com.linkdump.tchur.ld.services.MyFirebaseMessagingService;
+import com.linkdump.tchur.ld.utils.OpenGraph.MetaElement;
+import com.linkdump.tchur.ld.utils.OpenGraph.OpenGraph;
 import com.linkdump.tchur.ld.utils.RichLinkUtil;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -35,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.ItemClickListener, NewGroupChatAdapter.ItemClickListener {
+    private static String TAG = "ChatActivity";
 
     private RecyclerView mRecyclerView;
     private NewGroupChatAdapter adapter;
@@ -87,16 +94,34 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         final EditText chatEditText = findViewById(R.id.chat_message_edit_text);
 
         imageButton.setOnClickListener(view -> {
-            RichLinkUtil.test(this, "https://www.imgur.com");
+//            RichLinkUtil.test(this, "https://www.imgur.com");
             if (!chatEditText.getText().toString().equals("")) {
+                Boolean hasLink = false;
+                String url = RichLinkUtil.getFirstUrlFromString(chatEditText.getText().toString());
+                if (url != null){
+                    hasLink = true;
+                }
                 Map<String, Object> sendMessage = new HashMap<>();
                 sendMessage.put("message", chatEditText.getText() + "");
                 sendMessage.put("user", mAuth.getUid());
                 sendMessage.put("userName", mAuth.getCurrentUser().getDisplayName());
                 sendMessage.put("sentTime", Calendar.getInstance().getTimeInMillis());
+                Boolean finalHasLink = hasLink;
+                String finalUrl = url;
+                Log.d(TAG, "before database push");
                 db.collection("groups").document(currentGroup)
                         .collection("messages").add(sendMessage).addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
+                        Log.d(TAG, "Successfully pushed");
+                        DocumentReference messageRef = task.getResult();
+                        if (finalHasLink) {
+                            Log.d(TAG, "found Link in text");
+                            RichLinkUtil.getRichLinkProperties(getApplicationContext(), finalUrl, data -> {
+                                Log.d(TAG, "right before setting message with OG: tags");
+                                sendMessage.put("link", data);
+                                messageRef.set(sendMessage, SetOptions.merge());
+                            });
+                        }
                     }
                 });
                 chatEditText.setText("");
