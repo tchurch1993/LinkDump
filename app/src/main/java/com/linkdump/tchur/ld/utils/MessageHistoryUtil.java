@@ -23,7 +23,8 @@ import java.util.Collections;
 public final class MessageHistoryUtil {
     private static String TAG = "MessageHistoryUtil";
 
-    private MessageHistoryUtil() {}
+    private MessageHistoryUtil() {
+    }
 
     public static void writeMessages(Context context, String key, Object object) throws IOException {
         FileOutputStream fos = context.openFileOutput(key, Context.MODE_PRIVATE);
@@ -46,7 +47,7 @@ public final class MessageHistoryUtil {
         ArrayList<Message> messages = new ArrayList<>();
         try {
             messages = (ArrayList<Message>) MessageHistoryUtil.readMessages(context, groupId);
-        } catch (IOException ignored){
+        } catch (IOException ignored) {
             Log.d(TAG, "inside readIO exception in groupmessagehistory method");
         }
         if (!messages.isEmpty()) {
@@ -66,10 +67,10 @@ public final class MessageHistoryUtil {
     }
 
     public static ArrayList<NotificationCompat.MessagingStyle.Message> convertToMessagesCompat(Context context, String groupId) throws IOException, ClassNotFoundException {
-        ArrayList<Message> messages = (ArrayList<Message>) readMessages(context,groupId);
+        ArrayList<Message> messages = (ArrayList<Message>) readMessages(context, groupId);
         ArrayList<NotificationCompat.MessagingStyle.Message> messagesCompat = new ArrayList<>();
         Collections.sort(messages);
-        for (Message m : messages){
+        for (Message m : messages) {
             Log.d(TAG, "name of sender: " + m.getUserName());
             Person person = new Person.Builder().setName(m.getUserName()).build();
             messagesCompat.add(new NotificationCompat.MessagingStyle.Message(m.getMessage(), m.getSentTime(), person));
@@ -78,7 +79,7 @@ public final class MessageHistoryUtil {
     }
 
     public static void clearGroupHistory(Context context, String groupId) throws IOException {
-        writeMessages(context,groupId, new ArrayList<>());
+        writeMessages(context, groupId, new ArrayList<>());
     }
 
 

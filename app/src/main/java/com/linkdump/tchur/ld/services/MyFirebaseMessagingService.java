@@ -9,7 +9,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.media.AudioAttributes;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -191,11 +190,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      *
      * @param data FCM message body received.
      */
-    private void sendGroupChatNotification(Map<String, String> data) throws IOException, ClassNotFoundException {
+    private void sendGroupChatNotification(Map<String, String> data) {
         String groupId = data.get("groupId");
         String groupReqCode = data.get("groupReqCode");
         String sentMessage = data.get("message");
         String sender = data.get("sender");
+        String title = data.get("title");
         Long sentTime = Long.parseLong(data.get("sentTime"));
         assert groupReqCode != null;
         int intGroupReCode = Integer.parseInt(groupReqCode);
@@ -241,7 +241,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         NotificationCompat.MessagingStyle messagingStyle =
                 new NotificationCompat.MessagingStyle(me);
-        messagingStyle.setConversationTitle(data.get("title"))
+        messagingStyle.setConversationTitle(title)
                 .setGroupConversation(true);
         ArrayList<NotificationCompat.MessagingStyle.Message> messagesHistory = new ArrayList<>();
         try {
@@ -264,8 +264,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         .setSmallIcon(R.drawable.ic_link_dump)
                         .setStyle(messagingStyle)
                         .setColor(getResources().getColor(R.color.colorPrimary, getTheme()))
-                        .setContentTitle(data.get("title"))
-                        .setContentText(data.get("message"))
+                        .setContentTitle(title)
+                        .setContentText(sentMessage)
                         .addAction(action)
                         .setOnlyAlertOnce(true)
                         .setDeleteIntent(deletePendingIntent)
@@ -273,6 +273,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         .setSound(defaultSoundUri)
                         .setDefaults(Notification.FLAG_ONLY_ALERT_ONCE)
                         .setContentIntent(pendingIntent);
+
 
         NotificationManager notificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);

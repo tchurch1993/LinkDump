@@ -5,10 +5,8 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.style.URLSpan;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -18,7 +16,6 @@ import android.widget.ImageButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -27,12 +24,11 @@ import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.adapters.GroupChatAdapter;
 import com.linkdump.tchur.ld.adapters.NewGroupChatAdapter;
 import com.linkdump.tchur.ld.objects.Message;
-import com.linkdump.tchur.ld.services.MyFirebaseMessagingService;
-import com.linkdump.tchur.ld.utils.OpenGraph.MetaElement;
-import com.linkdump.tchur.ld.utils.OpenGraph.OpenGraph;
 import com.linkdump.tchur.ld.utils.RichLinkUtil;
+import com.linkedin.urls.Url;
+import com.linkedin.urls.detection.UrlDetector;
+import com.linkedin.urls.detection.UrlDetectorOptions;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -97,9 +93,12 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
 //            RichLinkUtil.test(this, "https://www.imgur.com");
             if (!chatEditText.getText().toString().equals("")) {
                 Boolean hasLink = false;
-                String url = RichLinkUtil.getFirstUrlFromString(chatEditText.getText().toString());
-                if (url != null){
+                String url = "";
+                UrlDetector detector = new UrlDetector(chatEditText.getText().toString(), UrlDetectorOptions.Default);
+                List<Url> urls = detector.detect();
+                if (!urls.isEmpty()) {
                     hasLink = true;
+                    url = urls.get(0).getFullUrl();
                 }
                 Map<String, Object> sendMessage = new HashMap<>();
                 sendMessage.put("message", chatEditText.getText() + "");
@@ -108,6 +107,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 sendMessage.put("sentTime", Calendar.getInstance().getTimeInMillis());
                 Boolean finalHasLink = hasLink;
                 String finalUrl = url;
+                Log.d(TAG, "url before message push: " + finalUrl);
                 Log.d(TAG, "before database push");
                 db.collection("groups").document(currentGroup)
                         .collection("messages").add(sendMessage).addOnCompleteListener(task -> {

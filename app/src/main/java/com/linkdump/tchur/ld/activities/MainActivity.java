@@ -175,7 +175,6 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
     public void subscriptionHandler() {
         for (String groupthing : groupIDs) {
             FirebaseMessaging.getInstance().subscribeToTopic(groupthing);
-
         }
     }
 
@@ -206,7 +205,6 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
                     } else {
                         userGroups.add(NO_GROUP_STRING);
                         adapter.notifyDataSetChanged();
-
                     }
                 }
             }

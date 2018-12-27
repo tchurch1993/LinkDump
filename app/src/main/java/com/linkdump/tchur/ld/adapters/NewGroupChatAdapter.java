@@ -3,7 +3,6 @@ package com.linkdump.tchur.ld.adapters;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.text.style.URLSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,20 +42,27 @@ public class NewGroupChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         return new DefaultViewHolder(view);
     }
 
+
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
         Message message = mData.get(position);
         setAnimation(viewHolder.itemView, position);
 
         if (mData.get(position).getIsUser()) {
-            ((DefaultViewHolder)viewHolder).theirLayout.setVisibility(View.GONE);
-            ((DefaultViewHolder)viewHolder).myLayout.setVisibility(View.VISIBLE);
-            ((DefaultViewHolder)viewHolder).myMessageTextView.setText(message.getMessage());
+            //if me
+            ((DefaultViewHolder) viewHolder).theirLayout.setVisibility(View.GONE);
+            ((DefaultViewHolder) viewHolder).myLayout.setVisibility(View.VISIBLE);
+            ((DefaultViewHolder) viewHolder).myMessageTextView.setText(message.getMessage());
         } else {
-            ((DefaultViewHolder)viewHolder).theirLayout.setVisibility(View.VISIBLE);
-            ((DefaultViewHolder)viewHolder).myLayout.setVisibility(View.GONE);
-            ((DefaultViewHolder)viewHolder).theirMessageTextView.setText(message.getMessage());
-            ((DefaultViewHolder)viewHolder).userName.setText(message.getUserName());
+            //if them
+            ((DefaultViewHolder) viewHolder).theirLayout.setVisibility(View.VISIBLE);
+            ((DefaultViewHolder) viewHolder).myLayout.setVisibility(View.GONE);
+            ((DefaultViewHolder) viewHolder).theirMessageTextView.setText(message.getMessage());
+            if ((mData.size() > 1) && (message.getUser().equals(mData.get(position - 1).getUser()))) {
+                ((DefaultViewHolder) viewHolder).userName.setVisibility(View.GONE);
+            } else {
+                ((DefaultViewHolder) viewHolder).userName.setText(message.getUserName());
+            }
         }
     }
 

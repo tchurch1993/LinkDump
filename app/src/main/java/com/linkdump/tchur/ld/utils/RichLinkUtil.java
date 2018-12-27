@@ -6,19 +6,9 @@ import android.webkit.URLUtil;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.bumptech.glide.load.model.UrlUriLoader;
-import com.google.api.client.util.StringUtils;
 
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -77,7 +67,7 @@ public class RichLinkUtil {
         Map<String, String> ogMap = new HashMap<>();
         if (headTag.contains("og:")) {
             int index = headTag.indexOf("og:");
-            String headCopy = headTag.toString();
+            String headCopy = headTag;
             while (index != -1) {
                 headCopy = headCopy.substring(index + 3);
                 int spaceIndex = headCopy.indexOf(" ");
@@ -85,6 +75,7 @@ public class RichLinkUtil {
                 headCopy = headCopy.substring(spaceIndex + 9);
                 int closingIndex = headCopy.indexOf("/>");
                 String content = headCopy.substring(0, closingIndex);
+                Log.d(TAG, "OG tag: " + property + " found");
                 if (property.equals("description") || property.equals("image") || property.equals("title"))
                     ogMap.put(property, content);
                 index = headCopy.indexOf("og:");
@@ -96,8 +87,9 @@ public class RichLinkUtil {
 
     public static void getRichLinkProperties(Context context, String url, OGTagCallback callback) {
         String guessedURL = URLUtil.guessUrl(url);
-        guessedURL = guessedURL.replace("http", "https");
+//        guessedURL = guessedURL.replace("http", "https");
         Log.d(TAG, guessedURL);
+
 
         test(context, guessedURL, new VolleyCallback() {
             @Override
@@ -110,7 +102,22 @@ public class RichLinkUtil {
                 if (error.equals("none")) {
                     Log.d(TAG, "no header tag was found");
                 } else {
-                    Log.d(TAG, "request failed");
+                    test(context, guessedURL.replace("http", "https"), new VolleyCallback() {
+                        @Override
+                        public void onSuccess(String result) {
+                            callback.onSuccess(getOGTags(result));
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            if (error.equals("none")) {
+                                Log.d(TAG, "no header tag was found");
+                            } else {
+                                Log.d(TAG, "request Failed");
+                            }
+                        }
+                    });
+
                 }
             }
         });
@@ -141,6 +148,7 @@ public class RichLinkUtil {
 
         }
         if (links.isEmpty()) {
+            Log.d(TAG, "no links found");
             return null;
         }
         return links.get(0);
