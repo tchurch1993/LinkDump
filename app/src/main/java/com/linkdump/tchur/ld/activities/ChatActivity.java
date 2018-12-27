@@ -2,6 +2,7 @@ package com.linkdump.tchur.ld.activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -10,12 +11,14 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.webkit.URLUtil;
 import android.widget.EditText;
 import android.widget.ImageButton;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -24,11 +27,16 @@ import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.adapters.GroupChatAdapter;
 import com.linkdump.tchur.ld.adapters.NewGroupChatAdapter;
 import com.linkdump.tchur.ld.objects.Message;
-import com.linkdump.tchur.ld.utils.RichLinkUtil;
 import com.linkedin.urls.Url;
 import com.linkedin.urls.detection.UrlDetector;
 import com.linkedin.urls.detection.UrlDetectorOptions;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -50,6 +58,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
     private List<String> userGroups;
     private SharedPreferences prefs;
     private LinearLayoutManager mLayoutManager;
+    private DocumentReference groupRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +73,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         messages = new ArrayList<>();
         Intent intent = getIntent();
         currentGroup = intent.getStringExtra("groupID");
+        groupRef = db.collection("groups").document(currentGroup);
         prefs = this.getSharedPreferences(
                 getPackageName(), MODE_PRIVATE);
 
@@ -89,8 +99,8 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         ImageButton imageButton = findViewById(R.id.imageButton);
         final EditText chatEditText = findViewById(R.id.chat_message_edit_text);
 
+
         imageButton.setOnClickListener(view -> {
-//            RichLinkUtil.test(this, "https://www.imgur.com");
             if (!chatEditText.getText().toString().equals("")) {
                 Boolean hasLink = false;
                 String url = "";
@@ -105,22 +115,22 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 sendMessage.put("user", mAuth.getUid());
                 sendMessage.put("userName", mAuth.getCurrentUser().getDisplayName());
                 sendMessage.put("sentTime", Calendar.getInstance().getTimeInMillis());
+                if (hasLink){
+                    sendMessage.put("messageType", "LINK");
+                } else {
+                    sendMessage.put("messageType", "TEXT");
+                }
                 Boolean finalHasLink = hasLink;
                 String finalUrl = url;
                 Log.d(TAG, "url before message push: " + finalUrl);
                 Log.d(TAG, "before database push");
-                db.collection("groups").document(currentGroup)
-                        .collection("messages").add(sendMessage).addOnCompleteListener(task -> {
+                groupRef.collection("messages").add(sendMessage).addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         Log.d(TAG, "Successfully pushed");
                         DocumentReference messageRef = task.getResult();
                         if (finalHasLink) {
                             Log.d(TAG, "found Link in text");
-                            RichLinkUtil.getRichLinkProperties(getApplicationContext(), finalUrl, data -> {
-                                Log.d(TAG, "right before setting message with OG: tags");
-                                sendMessage.put("link", data);
-                                messageRef.set(sendMessage, SetOptions.merge());
-                            });
+                            new JsoupAsyncTask().execute(finalUrl, messageRef.getId());
                         }
                     }
                 });
@@ -140,19 +150,6 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
             }
             return false;
         });
-
-//        CharSequence message = getMessageText(getIntent());
-//        if (message != null){
-//            chatEditText.setText(message);
-//            imageButton.callOnClick();
-//            Notification repliedNotification = new Notification.Builder(getApplicationContext(), "Group Chat")
-//                    .setSmallIcon(R.drawable.ic_link_dump)
-//                    .setContentText(message)
-//                    .build();
-//
-//            NotificationManagerCompat notificationManager1 = NotificationManagerCompat.from(this);
-//            notificationManager1.notify(NOTIFICATION_ID, repliedNotification);
-//        }
     }
 
     public void groupChatListener(String currentGroup) {
@@ -166,6 +163,18 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 QueryDocumentSnapshot mDoc = doc.getDocument();
                 Log.d("demo", mDoc.get("message") + "");
                 Message tempMessage = mDoc.toObject(Message.class);
+                if (mDoc.getData().get("link") != null){
+                    Object test = mDoc.getData().get("link");
+                    Log.d(TAG, "");
+                }
+                if (tempMessage.getMessageType() != null && tempMessage.getMessageType().equals("LINK")){
+                    if (tempMessage.getLinkData() == null){
+                        Log.d(TAG, "linkData is null");
+                        //tempMessage.setMessageType("TEXT");
+                    } else {
+                        Log.d(TAG, "linkData not null");
+                    }
+                }
                 if (!tempMessage.getUser().equals(mAuth.getUid())) {
                     tempMessage.setIsUser(false);
                 } else {
@@ -180,14 +189,6 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
             mLayoutManager.scrollToPosition(messages.size() - 1);
         });
     }
-
-//    private CharSequence getMessageText(Intent intent) {
-//        Bundle remoteInput = RemoteInput.getResultsFromIntent(intent);
-//        if (remoteInput != null) {
-//            return remoteInput.getCharSequence(KEY_TEXT_REPLY);
-//        }
-//        return null;
-//    }
 
     @Override
     public void onItemClick(View view, int position) {
@@ -216,4 +217,73 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
         notificationManager.cancel(0);
     }
+
+    public class JsoupAsyncTask extends AsyncTask<String, Void, Map<String, String>> {
+        private final String TAG = JsoupAsyncTask.class.getSimpleName();
+        private String messageId = null;
+
+        @Override
+        protected Map<String, String> doInBackground(String... strings) {
+            String guessedUrl = URLUtil.guessUrl(strings[0]);
+            messageId = strings[1];
+            Document doc = null;
+            try {
+                Log.d(TAG, "first URL is: " + guessedUrl);
+                doc = Jsoup.connect(guessedUrl).get();
+            } catch (IOException e) {
+                guessedUrl = guessedUrl.replace("http", "https");
+                Log.d(TAG, "second URL after http replaced with https is: " + guessedUrl);
+                try {
+                    doc = Jsoup.connect(guessedUrl).get();
+                } catch (IOException error) {
+                    error.printStackTrace();
+                }
+                e.printStackTrace();
+            }
+            if (doc != null) {
+                Log.d(TAG, doc.title());
+                Boolean hasSchemaThing = false;
+                if (doc.attr("itemprop") != null){
+                    hasSchemaThing = true;
+                }
+                Element headElement = doc.head();
+                Elements metaElements = headElement.getElementsByAttribute("property");
+                Log.d(TAG, "all meta elements: " + metaElements.toString());
+                Map<String, String> ogTags = new HashMap<>();
+                for (Element e : metaElements) {
+                    if (e.attributes().get("property").matches("og:image|og:title|og:description|og:type|og:url") ||
+                            e.attributes().get("Property").matches("og:image|og:title|og:description|og:type|og:url")) {
+                        ogTags.put(e.attr("property"), e.attr("content"));
+                        Log.d(TAG, e.attr("content"));
+                    }
+                }
+                Log.d(TAG, "right before return: " + ogTags.toString());
+                return ogTags;
+            } else {
+                return null;
+            }
+
+        }
+
+        @Override
+        protected void onPostExecute(Map<String, String> s) {
+            if (s != null) {
+                Log.d(TAG, "Map in onPostExecute: " + s.toString());
+                groupRef.collection("messages").document(messageId).get().addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && (task.getResult() != null)) {
+                        Map<String, Object> data;
+                        DocumentSnapshot message = task.getResult();
+                        data = message.getData();
+                        data.put("link", s);
+                        DocumentReference messageRef = groupRef.collection("messages").document(messageId);
+                        messageRef.set(data, SetOptions.merge());
+                        Log.d(TAG, "in post execture DB call");
+                    }
+                });
+            }
+            super.onPostExecute(s);
+        }
+    }
 }
+
+

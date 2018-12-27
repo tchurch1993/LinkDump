@@ -3,11 +3,14 @@ package com.linkdump.tchur.ld.objects;
 import android.support.annotation.NonNull;
 
 import java.io.Serializable;
+import java.util.Map;
 
 public class Message implements Comparable, Serializable {
-    private String message, user, userName;
+    private String message, user, userName, messageType, imageUrl;
+    private Map<String, Object> linkData;
     private long sentTime;
     private boolean isUser;
+
 
     public Message() {
     }
@@ -18,6 +21,29 @@ public class Message implements Comparable, Serializable {
         sentTime = mSentTime;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public Map<String, Object> getLinkData() {
+        return linkData;
+    }
+
+    public void setLinkData(Map<String, Object> linkData) {
+        this.linkData = linkData;
+    }
+
+    public String getMessageType() {
+        return messageType;
+    }
+
+    public void setMessageType(String messageType) {
+        this.messageType = messageType;
+    }
 
     public String getUserName() {
         return userName;

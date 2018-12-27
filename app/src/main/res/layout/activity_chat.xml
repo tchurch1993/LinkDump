@@ -22,7 +22,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:hint="@string/ChatBar_Hint"
-            android:inputType="textAutoCorrect"
+            android:inputType="textCapSentences|textAutoCorrect|phone|date|time"
             android:selectAllOnFocus="false"
             android:singleLine="false" />
     </android.support.design.widget.TextInputLayout>

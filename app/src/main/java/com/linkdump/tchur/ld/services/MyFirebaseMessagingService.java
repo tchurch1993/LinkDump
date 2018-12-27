@@ -69,8 +69,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // messages. For more see: https://firebase.google.com/docs/cloud-messaging/concept-options
         // [END_EXCLUDE]
 
-        // TODO(developer): Handle FCM messages here.
-        // Not getting messages here? See why this may be: https://goo.gl/39bRNJ
         Log.d(TAG, "From: " + remoteMessage.getTo());
         prefs = this.getSharedPreferences(
                 getPackageName(), MODE_PRIVATE);
@@ -98,11 +96,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             }
 
             if (!data.get("senderId").equals(mAuth.getCurrentUser().getUid())) {
-                try {
-                    sendGroupChatNotification(data);
-                } catch (IOException | ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
+                sendGroupChatNotification(data);
             }
         }
 
@@ -141,26 +135,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     // [END on_new_token]
 
-    /**
-     * Schedule a job using FirebaseJobDispatcher.
-     */
-    private void scheduleJob() {
-        // [START dispatch_job]
-        FirebaseJobDispatcher dispatcher = new FirebaseJobDispatcher(new GooglePlayDriver(this));
-        Job myJob = dispatcher.newJobBuilder()
-                .setService(MyJobService.class)
-                .setTag("my-job-tag")
-                .build();
-        dispatcher.schedule(myJob);
-        // [END dispatch_job]
-    }
-
-    /**
-     * Handle time allotted to BroadcastReceivers.
-     */
-    private void handleNow() {
-        Log.d(TAG, "Short lived task is done.");
-    }
 
     /**
      * Persist token to third-party servers.

@@ -57,6 +57,7 @@ dependencies {
         exclude group: 'org.apache.httpcomponents'
         exclude module: 'guava-jdk5'
     }
+    implementation 'org.jsoup:jsoup:1.11.3'
     implementation group: 'com.linkedin.urls', name: 'url-detector', version: '0.1.17'
     androidTestImplementation 'com.android.support:support-annotations:28.0.0'
     implementation 'com.google.android.gms:play-services-ads:15.0.0'
