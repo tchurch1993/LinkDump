@@ -167,7 +167,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private void sendGroupChatNotification(Map<String, String> data) {
         String groupId = data.get("groupId");
         String groupReqCode = data.get("groupReqCode");
-        String sentMessage = data.get("message");
+        String sentMessage;
+        if (data.get("message") == null) {
+            sentMessage = "Sent an image";
+        } else {
+            sentMessage = data.get("message");
+        }
         String sender = data.get("sender");
         String title = data.get("title");
         Long sentTime = Long.parseLong(data.get("sentTime"));
@@ -184,8 +189,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         String channelId = "Group Chat";
 
         RemoteInput remoteInput = new RemoteInput.Builder(KEY_TEXT_REPLY).setLabel("Reply").build();
-
         Person person = new Person.Builder().setName(sender).build();
+
         NotificationCompat.MessagingStyle.Message message = new NotificationCompat.MessagingStyle.Message(sentMessage, sentTime, person);
         Log.d(TAG, sender);
         Message messageHistory = new Message();

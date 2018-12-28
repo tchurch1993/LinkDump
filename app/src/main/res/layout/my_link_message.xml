@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:animateLayoutChanges="true"
     android:layout_height="wrap_content">
 
     <RelativeLayout
@@ -26,7 +27,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:autoLink="web"
-            android:background="@drawable/my_message"
+            android:background="@drawable/my_link_message"
             android:elevation="2dp"
             android:padding="10dp"
             android:text="Placeholder message"
@@ -41,7 +42,8 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/my_message_body"
             android:layout_alignParentEnd="true"
-            android:background="@drawable/my_message"
+            android:elevation="2dp"
+            android:background="@drawable/my_link_image"
             android:gravity="end">
 
             <ImageView
@@ -128,6 +130,50 @@
             android:textColorLink="@color/common_google_signin_btn_text_light"
             android:textIsSelectable="true"
             android:textSize="18sp" />
+
+        <RelativeLayout
+            android:id="@+id/theirRichLinkLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/their_message_body"
+            android:layout_alignParentStart="true"
+            android:background="@drawable/their_message"
+            android:gravity="start">
+
+            <ImageView
+                android:id="@+id/theirLinkImage"
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:elevation="2dp"
+                android:padding="10dp"
+                android:scaleType="fitCenter"
+                tools:src="@drawable/googleg_standard_color_18" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/theirLinkImage"
+                android:elevation="2dp"
+                android:orientation="vertical"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/theirLinkTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Title"
+                    android:textColor="@color/common_google_signin_btn_text_light_default" />
+
+                <TextView
+                    android:id="@+id/theirLinkDescription"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Description"
+                    android:textColor="@color/common_google_signin_btn_text_light_default" />
+            </LinearLayout>
+
+        </RelativeLayout>
     </RelativeLayout>
 
 </android.support.constraint.ConstraintLayout>

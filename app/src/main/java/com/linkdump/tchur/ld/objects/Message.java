@@ -3,11 +3,9 @@ package com.linkdump.tchur.ld.objects;
 import android.support.annotation.NonNull;
 
 import java.io.Serializable;
-import java.util.Map;
 
 public class Message implements Comparable, Serializable {
-    private String message, user, userName, messageType, imageUrl;
-    private Map<String, Object> linkData;
+    private String message, user, userName, messageType, imageUrl, linkImage, linkTitle, linkDescription, linkUrl, linkVideo;
     private long sentTime;
     private boolean isUser;
 
@@ -29,12 +27,44 @@ public class Message implements Comparable, Serializable {
         this.imageUrl = imageUrl;
     }
 
-    public Map<String, Object> getLinkData() {
-        return linkData;
+    public String getLinkVideo() {
+        return linkVideo;
     }
 
-    public void setLinkData(Map<String, Object> linkData) {
-        this.linkData = linkData;
+    public void setLinkVideo(String linkVideo) {
+        this.linkVideo = linkVideo;
+    }
+
+    public String getLinkUrl() {
+        return linkUrl;
+    }
+
+    public void setLinkUrl(String linkUrl) {
+        this.linkUrl = linkUrl;
+    }
+
+    public String getLinkImage() {
+        return linkImage;
+    }
+
+    public void setLinkImage(String linkImage) {
+        this.linkImage = linkImage;
+    }
+
+    public String getLinkTitle() {
+        return linkTitle;
+    }
+
+    public void setLinkTitle(String linkTitle) {
+        this.linkTitle = linkTitle;
+    }
+
+    public String getLinkDescription() {
+        return linkDescription;
+    }
+
+    public void setLinkDescription(String linkDescription) {
+        this.linkDescription = linkDescription;
     }
 
     public String getMessageType() {

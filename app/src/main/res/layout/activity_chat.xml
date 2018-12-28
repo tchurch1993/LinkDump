@@ -11,18 +11,20 @@
         android:layout_width="305dp"
         android:layout_height="66dp"
         android:layout_marginStart="8dp"
+        android:elevation="6dp"
+        android:outlineAmbientShadowColor="@color/common_google_signin_btn_text_dark"
         app:hintAnimationEnabled="false"
         app:hintEnabled="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
 
-        <android.support.design.widget.TextInputEditText
+        <com.linkdump.tchur.ld.utils.MyEditText
             android:id="@+id/chat_message_edit_text"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:hint="@string/ChatBar_Hint"
-            android:inputType="textCapSentences|textAutoCorrect|phone|date|time"
+            android:inputType="textCapSentences|textAutoCorrect"
             android:selectAllOnFocus="false"
             android:singleLine="false" />
     </android.support.design.widget.TextInputLayout>

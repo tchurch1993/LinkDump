@@ -1,16 +1,23 @@
 package com.linkdump.tchur.ld.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v13.view.inputmethod.EditorInfoCompat;
+import android.support.v13.view.inputmethod.InputConnectionCompat;
+import android.support.v13.view.inputmethod.InputContentInfoCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.os.BuildCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
 import android.webkit.URLUtil;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -27,6 +34,7 @@ import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.adapters.GroupChatAdapter;
 import com.linkdump.tchur.ld.adapters.NewGroupChatAdapter;
 import com.linkdump.tchur.ld.objects.Message;
+import com.linkdump.tchur.ld.utils.MyEditText;
 import com.linkedin.urls.Url;
 import com.linkedin.urls.detection.UrlDetector;
 import com.linkedin.urls.detection.UrlDetectorOptions;
@@ -46,6 +54,7 @@ import java.util.Map;
 
 public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.ItemClickListener, NewGroupChatAdapter.ItemClickListener {
     private static String TAG = "ChatActivity";
+    private static String OG_REGEX = "og:image|og:title|og:description|og:type|og:url|og:video";
 
     private RecyclerView mRecyclerView;
     private NewGroupChatAdapter adapter;
@@ -59,6 +68,8 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
     private SharedPreferences prefs;
     private LinearLayoutManager mLayoutManager;
     private DocumentReference groupRef;
+    private ImageButton imageButton;
+    private MyEditText chatEditText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,9 +107,21 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         mRecyclerView.setAdapter(adapter);
         groupChatListener(currentGroup);
 
-        ImageButton imageButton = findViewById(R.id.imageButton);
-        final EditText chatEditText = findViewById(R.id.chat_message_edit_text);
+        imageButton = findViewById(R.id.imageButton);
+        chatEditText = findViewById(R.id.chat_message_edit_text);
+        chatEditText.setKeyBoardInputCallbackListener((inputContentInfo, flags, opts) -> {
+            if (inputContentInfo.getLinkUri() != null){
+                Log.d(TAG, String.valueOf(inputContentInfo.getLinkUri()));
+                Map<String, Object> sendMessage = new HashMap<>();
+                sendMessage.put("user", mAuth.getUid());
+                sendMessage.put("userName", mAuth.getCurrentUser().getDisplayName());
+                sendMessage.put("sentTime", Calendar.getInstance().getTimeInMillis());
+                sendMessage.put("imageUrl", inputContentInfo.getLinkUri().toString());
+                sendMessage.put("messageType", "IMAGE");
+                groupRef.collection("messages").add(sendMessage);
+            }
 
+        });
 
         imageButton.setOnClickListener(view -> {
             if (!chatEditText.getText().toString().equals("")) {
@@ -115,11 +138,8 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 sendMessage.put("user", mAuth.getUid());
                 sendMessage.put("userName", mAuth.getCurrentUser().getDisplayName());
                 sendMessage.put("sentTime", Calendar.getInstance().getTimeInMillis());
-                if (hasLink){
-                    sendMessage.put("messageType", "LINK");
-                } else {
-                    sendMessage.put("messageType", "TEXT");
-                }
+                sendMessage.put("messageType", "TEXT");
+
                 Boolean finalHasLink = hasLink;
                 String finalUrl = url;
                 Log.d(TAG, "url before message push: " + finalUrl);
@@ -134,7 +154,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                         }
                     }
                 });
-                chatEditText.setText("");
+                chatEditText.getText().clear();
             }
         });
         chatEditText.setOnKeyListener((v, keyCode, event) -> {
@@ -163,25 +183,22 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 QueryDocumentSnapshot mDoc = doc.getDocument();
                 Log.d("demo", mDoc.get("message") + "");
                 Message tempMessage = mDoc.toObject(Message.class);
-                if (mDoc.getData().get("link") != null){
-                    Object test = mDoc.getData().get("link");
-                    Log.d(TAG, "");
-                }
-                if (tempMessage.getMessageType() != null && tempMessage.getMessageType().equals("LINK")){
-                    if (tempMessage.getLinkData() == null){
-                        Log.d(TAG, "linkData is null");
-                        //tempMessage.setMessageType("TEXT");
-                    } else {
-                        Log.d(TAG, "linkData not null");
-                    }
-                }
                 if (!tempMessage.getUser().equals(mAuth.getUid())) {
                     tempMessage.setIsUser(false);
                 } else {
                     tempMessage.setIsUser(true);
                 }
-                messages.add(tempMessage);
-                events.add(mDoc.getString("message"));
+                boolean exists = false;
+                for (int i = 0; i < messages.size(); i++){
+                    if (messages.get(i).getSentTime() == tempMessage.getSentTime()){
+                        messages.set(i, tempMessage);
+                        exists = true;
+                    }
+                }
+                if (!exists){
+                    messages.add(tempMessage);
+                    events.add(mDoc.getString("message"));
+                }
             }
             Collections.sort(messages);
             adapter.notifyDataSetChanged();
@@ -218,6 +235,42 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         notificationManager.cancel(0);
     }
 
+    public EditText addMimeTypes(Context context){
+        return new android.support.v7.widget.AppCompatEditText(context) {
+            @Override
+            public InputConnection onCreateInputConnection(EditorInfo editorInfo) {
+                final InputConnection ic = super.onCreateInputConnection(editorInfo);
+                EditorInfoCompat.setContentMimeTypes(editorInfo,
+                        new String [] {"image/png"});
+
+                final InputConnectionCompat.OnCommitContentListener callback =
+                        (inputContentInfo, flags, opts) -> {
+                            // read and display inputContentInfo asynchronously
+                            if (BuildCompat.isAtLeastNMR1() && (flags &
+                                    InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION) != 0) {
+                                try {
+                                    inputContentInfo.requestPermission();
+                                }
+                                catch (Exception e) {
+                                    return false; // return false if failed
+                                }
+                            }
+
+                            Log.d(TAG, "contentURI: " + inputContentInfo.getContentUri());
+                            if (inputContentInfo.getLinkUri() != null){
+                                Log.d(TAG, "LinkUri: " + inputContentInfo.getLinkUri());
+                            }
+
+                            // read and display inputContentInfo asynchronously.
+                            // call inputContentInfo.releasePermission() as needed.
+
+                            return true;  // return true if succeeded
+                        };
+                return InputConnectionCompat.createWrapper(ic, editorInfo, callback);
+            }
+        };
+    }
+
     public class JsoupAsyncTask extends AsyncTask<String, Void, Map<String, String>> {
         private final String TAG = JsoupAsyncTask.class.getSimpleName();
         private String messageId = null;
@@ -243,7 +296,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
             if (doc != null) {
                 Log.d(TAG, doc.title());
                 Boolean hasSchemaThing = false;
-                if (doc.attr("itemprop") != null){
+                if (doc.attr("itemprop") != null) {
                     hasSchemaThing = true;
                 }
                 Element headElement = doc.head();
@@ -251,8 +304,8 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 Log.d(TAG, "all meta elements: " + metaElements.toString());
                 Map<String, String> ogTags = new HashMap<>();
                 for (Element e : metaElements) {
-                    if (e.attributes().get("property").matches("og:image|og:title|og:description|og:type|og:url") ||
-                            e.attributes().get("Property").matches("og:image|og:title|og:description|og:type|og:url")) {
+                    if (e.attributes().get("property").matches(OG_REGEX) ||
+                            e.attributes().get("Property").matches(OG_REGEX)) {
                         ogTags.put(e.attr("property"), e.attr("content"));
                         Log.d(TAG, e.attr("content"));
                     }
@@ -270,14 +323,36 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
             if (s != null) {
                 Log.d(TAG, "Map in onPostExecute: " + s.toString());
                 groupRef.collection("messages").document(messageId).get().addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && (task.getResult() != null)) {
+                    if ((task.getResult() != null) && task.isSuccessful()) {
                         Map<String, Object> data;
                         DocumentSnapshot message = task.getResult();
                         data = message.getData();
-                        data.put("link", s);
+                        if (!s.isEmpty()) {
+                            data.put("messageType", "LINK");
+                            if (s.get("og:image") != null) {
+                                data.put("linkImage", s.get("og:image"));
+                            }
+                            if (s.get("og:title") != null) {
+                                data.put("linkTitle", s.get("og:title"));
+                            }
+                            if (s.get("og:description") != null) {
+                                data.put("linkDescription", s.get("og:description"));
+                            }
+                            if (s.get("og:url") != null){
+                                data.put("linkUrl", s.get("og:url"));
+                            }
+                            if (s.get("og:video") != null){
+                                data.put("linkVideo", s.get("og:video"));
+                            }
+                        } else {
+                            if (data.get("imageLink") == null){
+                                data.put("messageType", "TEXT");
+                            }
+                        }
+
                         DocumentReference messageRef = groupRef.collection("messages").document(messageId);
                         messageRef.set(data, SetOptions.merge());
-                        Log.d(TAG, "in post execture DB call");
+                        Log.d(TAG, "in post execute DB call");
                     }
                 });
             }
