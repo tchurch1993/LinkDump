@@ -10,11 +10,14 @@ import android.support.v13.view.inputmethod.InputConnectionCompat;
 import android.support.v13.view.inputmethod.InputContentInfoCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.os.BuildCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
@@ -62,6 +65,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
     private String currentGroup;
+    private String groupName;
     private List<Message> messages;
     private DocumentReference userRef;
     private List<String> userGroups;
@@ -84,6 +88,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         messages = new ArrayList<>();
         Intent intent = getIntent();
         currentGroup = intent.getStringExtra("groupID");
+        groupName = intent.getStringExtra("groupName");
         groupRef = db.collection("groups").document(currentGroup);
         prefs = this.getSharedPreferences(
                 getPackageName(), MODE_PRIVATE);
@@ -106,11 +111,17 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         });
         mRecyclerView.setAdapter(adapter);
         groupChatListener(currentGroup);
+        Toolbar toolbar = findViewById(R.id.chatToolbar);
+        setSupportActionBar(toolbar);
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setTitle(groupName);
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setHomeAsUpIndicator(R.drawable.ic_baseline_arrow_back_24px);
 
         imageButton = findViewById(R.id.imageButton);
         chatEditText = findViewById(R.id.chat_message_edit_text);
         chatEditText.setKeyBoardInputCallbackListener((inputContentInfo, flags, opts) -> {
-            if (inputContentInfo.getLinkUri() != null){
+            if (inputContentInfo.getLinkUri() != null) {
                 Log.d(TAG, String.valueOf(inputContentInfo.getLinkUri()));
                 Map<String, Object> sendMessage = new HashMap<>();
                 sendMessage.put("user", mAuth.getUid());
@@ -122,6 +133,8 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
             }
 
         });
+
+
 
         imageButton.setOnClickListener(view -> {
             if (!chatEditText.getText().toString().equals("")) {
@@ -172,6 +185,16 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         });
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // handle arrow click here
+        if (item.getItemId() == android.R.id.home) {
+            finish(); // close this activity and return to preview activity (if there is any)
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
     public void groupChatListener(String currentGroup) {
         db.collection("groups").document(currentGroup).collection("messages").orderBy("sentTime", Query.Direction.DESCENDING).limit(25).addSnapshotListener((queryDocumentSnapshots, e) -> {
             if (e != null) {
@@ -189,13 +212,13 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                     tempMessage.setIsUser(true);
                 }
                 boolean exists = false;
-                for (int i = 0; i < messages.size(); i++){
-                    if (messages.get(i).getSentTime() == tempMessage.getSentTime()){
+                for (int i = 0; i < messages.size(); i++) {
+                    if (messages.get(i).getSentTime() == tempMessage.getSentTime()) {
                         messages.set(i, tempMessage);
                         exists = true;
                     }
                 }
-                if (!exists){
+                if (!exists) {
                     messages.add(tempMessage);
                     events.add(mDoc.getString("message"));
                 }
@@ -233,42 +256,6 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
     public void clearNotifications() {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
         notificationManager.cancel(0);
-    }
-
-    public EditText addMimeTypes(Context context){
-        return new android.support.v7.widget.AppCompatEditText(context) {
-            @Override
-            public InputConnection onCreateInputConnection(EditorInfo editorInfo) {
-                final InputConnection ic = super.onCreateInputConnection(editorInfo);
-                EditorInfoCompat.setContentMimeTypes(editorInfo,
-                        new String [] {"image/png"});
-
-                final InputConnectionCompat.OnCommitContentListener callback =
-                        (inputContentInfo, flags, opts) -> {
-                            // read and display inputContentInfo asynchronously
-                            if (BuildCompat.isAtLeastNMR1() && (flags &
-                                    InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION) != 0) {
-                                try {
-                                    inputContentInfo.requestPermission();
-                                }
-                                catch (Exception e) {
-                                    return false; // return false if failed
-                                }
-                            }
-
-                            Log.d(TAG, "contentURI: " + inputContentInfo.getContentUri());
-                            if (inputContentInfo.getLinkUri() != null){
-                                Log.d(TAG, "LinkUri: " + inputContentInfo.getLinkUri());
-                            }
-
-                            // read and display inputContentInfo asynchronously.
-                            // call inputContentInfo.releasePermission() as needed.
-
-                            return true;  // return true if succeeded
-                        };
-                return InputConnectionCompat.createWrapper(ic, editorInfo, callback);
-            }
-        };
     }
 
     public class JsoupAsyncTask extends AsyncTask<String, Void, Map<String, String>> {
@@ -338,14 +325,14 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                             if (s.get("og:description") != null) {
                                 data.put("linkDescription", s.get("og:description"));
                             }
-                            if (s.get("og:url") != null){
+                            if (s.get("og:url") != null) {
                                 data.put("linkUrl", s.get("og:url"));
                             }
-                            if (s.get("og:video") != null){
+                            if (s.get("og:video") != null) {
                                 data.put("linkVideo", s.get("og:video"));
                             }
                         } else {
-                            if (data.get("imageLink") == null){
+                            if (data.get("imageLink") == null) {
                                 data.put("messageType", "TEXT");
                             }
                         }

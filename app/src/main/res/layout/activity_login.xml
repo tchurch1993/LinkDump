@@ -48,6 +48,17 @@
             android:inputType="textPassword" />
     </android.support.design.widget.TextInputLayout>
 
+    <com.google.android.gms.common.SignInButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/googleSignInButton"
+        android:visibility="gone"
+        app:layout_constraintStart_toEndOf="@id/buttonLogin"
+        app:layout_constraintEnd_toStartOf="@id/buttonSignup"
+        app:layout_constraintTop_toTopOf="@id/buttonLogin"
+        app:layout_constraintBottom_toBottomOf="@+id/buttonLogin"/>
+
+
     <Button
         android:id="@+id/buttonSignup"
         android:layout_width="wrap_content"

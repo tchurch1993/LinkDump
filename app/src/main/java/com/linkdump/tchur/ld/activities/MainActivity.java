@@ -270,6 +270,7 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
         if (groupIDs.size() > 0) {
             Intent intent = new Intent(MainActivity.this, ChatActivity.class);
             intent.putExtra("groupID", groupIDs.get(position));
+            intent.putExtra("groupName", userGroups.get(position));
             startActivity(intent);
         } else {
             Toast.makeText(this, "Please add a Group", Toast.LENGTH_SHORT).show();
