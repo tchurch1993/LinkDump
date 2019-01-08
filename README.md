@@ -1,4 +1,4 @@
-# LinkDump
+# LD Messaging
 
 This is an Android Chat Application using Firebase Firestore.  The end goal is to create a simple and elegant UI that will not clutter your interface. This app shy's away from unneeded buttons and gimmicky features, but will include helpful interactions for the user to enhance their chatting experience.
 
