@@ -1,6 +1,7 @@
 package com.linkdump.tchur.ld.utils;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v13.view.inputmethod.EditorInfoCompat;
 import android.support.v13.view.inputmethod.InputConnectionCompat;
@@ -52,7 +53,7 @@ public class MyEditText extends android.support.v7.widget.AppCompatEditText {
                                                int flags, Bundle opts) {
 
                     // read and display inputContentInfo asynchronously
-                    if (BuildCompat.isAtLeastNMR1() && (flags &
+                    if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) && (flags &
                             InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION) != 0) {
                         try {
                             inputContentInfo.requestPermission();
