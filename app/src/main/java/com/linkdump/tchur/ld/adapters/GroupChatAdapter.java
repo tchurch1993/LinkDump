@@ -22,11 +22,13 @@ import java.util.List;
  */
 public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.ViewHolder> {
 
+
     private List<Message> mData;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
     private Context context;
     private int lastPosition = -1;
+
 
     // data is passed into the constructor
     public GroupChatAdapter(Context context, List<Message> data) {
@@ -34,6 +36,7 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.View
         this.mData = data;
         this.context = context;
     }
+
 
     // inflates the row layout from xml when needed
     @Override
@@ -50,7 +53,7 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.View
         Message message = mData.get(position);
         setAnimation(holder.itemView, position);
 
-        if (mData.get(position).getIsUser()){
+        if (mData.get(position).getIsUser()) {
             holder.theirLayout.setVisibility(View.GONE);
             holder.myLayout.setVisibility(View.VISIBLE);
             holder.myMessageTextView.setText(message.getMessage());
@@ -60,13 +63,17 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.View
             holder.theirMessageTextView.setText(message.getMessage());
             holder.userName.setText(message.getUserName());
         }
-    }  private void setAnimation(View viewToAnimate, int position){
-        if (position > lastPosition){
+    }
+
+
+    private void setAnimation(View viewToAnimate, int position) {
+        if (position > lastPosition) {
             Animation animation = AnimationUtils.loadAnimation(context, R.anim.item_animation_fall_down);
             viewToAnimate.startAnimation(animation);
             lastPosition = position;
         }
     }
+
 
     // total number of rows
     @Override
@@ -99,15 +106,19 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.View
             if (mClickListener != null) mClickListener.onItemClick(view, getAdapterPosition());
         }
     }
+
+
     // convenience method for getting data at click position
     public Message getItem(int id) {
         return mData.get(id);
     }
 
+
     // allows clicks events to be caught
     public void setClickListener(ItemClickListener itemClickListener) {
         this.mClickListener = itemClickListener;
     }
+
 
     // parent activity will implement this method to respond to click events
     public interface ItemClickListener {

@@ -17,7 +17,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SignupActivity extends AppCompatActivity {
+
+
     EditText editTextEmail, editTextPassword, editTextFirstName, editTextLastName, editTextPasswordConfirm;
+
     private FirebaseAuth mAuth;
     final String TAG = "demo";
 

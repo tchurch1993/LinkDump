@@ -35,9 +35,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
+
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
     private final String TAG = "Log";
+
     private GoogleSignInClient mGoogleSignInClient;
 
     EditText editTextUsername, editTextPassword;
@@ -54,10 +56,8 @@ public class LoginActivity extends AppCompatActivity {
             // Create channel to show notifications.
             String channelId = getString(R.string.default_notification_channel_id);
             String channelName = "chat";
-            NotificationManager notificationManager =
-                    getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(new NotificationChannel(channelId,
-                    channelName, NotificationManager.IMPORTANCE_LOW));
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW));
         }
 
         editTextUsername = findViewById(R.id.editTextEmail);
@@ -118,12 +118,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        findViewById(R.id.googleSignInButton).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                signIn();
-            }
-        });
+        findViewById(R.id.googleSignInButton).setOnClickListener(v -> signIn());
 
 
     }
@@ -156,62 +151,59 @@ public class LoginActivity extends AppCompatActivity {
 
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            Log.d(TAG, "signInWithCredential:success");
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                                    .setDisplayName(acct.getDisplayName())
-                                    .build();
-                            Map<String, Object> mUser = new HashMap<>();
-                            if (acct.getGivenName() != null){
-                                mUser.put("firstName", acct.getGivenName());
-                            }
-                            if (acct.getFamilyName() != null){
-                                mUser.put("lastName", acct.getFamilyName());
-                            }
-                            if (acct.getEmail() != null){
-                                mUser.put("email", acct.getEmail());
-                            }
-                            if (acct.getPhotoUrl() != null){
-                                mUser.put("photoUrl", acct.getPhotoUrl());
-                            }
-                            db.collection("users").document(user.getUid())
-                                    .set(mUser)
-                                    .addOnSuccessListener(aVoid -> Log.d("demo", "DocumentSnapshot successfully written!"))
-                                    .addOnFailureListener(e -> Log.w("demo", "Error writing document", e));
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        // Sign in success, update UI with the signed-in user's information
+                        Log.d(TAG, "signInWithCredential:success");
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                .setDisplayName(acct.getDisplayName())
+                                .build();
+                        Map<String, Object> mUser = new HashMap<>();
+                        if (acct.getGivenName() != null){
+                            mUser.put("firstName", acct.getGivenName());
+                        }
+                        if (acct.getFamilyName() != null){
+                            mUser.put("lastName", acct.getFamilyName());
+                        }
+                        if (acct.getEmail() != null){
+                            mUser.put("email", acct.getEmail());
+                        }
+                        if (acct.getPhotoUrl() != null){
+                            mUser.put("photoUrl", acct.getPhotoUrl());
+                        }
+                        db.collection("users").document(user.getUid())
+                                .set(mUser)
+                                .addOnSuccessListener(aVoid -> Log.d("demo", "DocumentSnapshot successfully written!"))
+                                .addOnFailureListener(e -> Log.w("demo", "Error writing document", e));
 
 
-                            user.updateProfile(profileUpdates)
-                                    .addOnCompleteListener(task1 -> {
-                                        if (task1.isSuccessful()) {
-                                            Log.d(TAG, "User profile updated");
-                                            Intent i = new Intent(LoginActivity.this, MainActivity.class);
-                                            startActivity(i);
-                                            finish();
-                                        }
-                                    });
+                        user.updateProfile(profileUpdates)
+                                .addOnCompleteListener(task1 -> {
+                                    if (task1.isSuccessful()) {
+                                        Log.d(TAG, "User profile updated");
+                                        Intent i = new Intent(LoginActivity.this, MainActivity.class);
+                                        startActivity(i);
+                                        finish();
+                                    }
+                                });
 
 //                            Intent i = new Intent(getApplicationContext(), MainActivity.class);
 //                            startActivity(i);
 //                            Toast.makeText(getApplicationContext()
 //                                    , "Welcome " + user.getDisplayName() + "!"
 //                                    , Toast.LENGTH_SHORT).show();
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w(TAG, "signInWithCredential:failure", task.getException());
-                            Toast.makeText(getApplicationContext(),
-                                    "Failed Sign In",
-                                    Toast.LENGTH_SHORT).show();
+                    } else {
+                        // If sign in fails, display a message to the user.
+                        Log.w(TAG, "signInWithCredential:failure", task.getException());
+                        Toast.makeText(getApplicationContext(),
+                                "Failed Sign In",
+                                Toast.LENGTH_SHORT).show();
 
-                        }
-
-                        // [START_EXCLUDE]
-                        // [END_EXCLUDE]
                     }
+
+                    // [START_EXCLUDE]
+                    // [END_EXCLUDE]
                 });
     }
 

@@ -43,68 +43,93 @@ import java.util.Map;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements GroupNameAdapter.ItemClickListener {
+
+    //Database Reference
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
     private DocumentReference userRef;
-    private DrawerLayout mDrawerLayout;
+
+    //Data
     private CollectionReference groupsRef;
     private List<String> userGroups;
     private List<String> groupIDs;
+
+    //Ui
+    private DrawerLayout mDrawerLayout;
     private RecyclerView mRecyclerView;
     private GroupNameAdapter adapter;
-    private String NO_GROUP_STRING = "No Groups Found";
+
+    //Constants
+    private final String NO_GROUP_STRING = "No Groups Found";
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         setTheme(R.style.LinkDumpDark);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         clearNotifications();
 
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 //            // Create channel to show notifications.
 //            String channelId = "Group Chat";
 //            String channelName = "Group Chat";
-//            NotificationManager notificationManager =
-//                    getSystemService(NotificationManager.class);
-//            notificationManager.createNotificationChannel(new NotificationChannel(channelId,
-//                    channelName, NotificationManager.IMPORTANCE_HIGH));
+//            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+//            notificationManager.createNotificationChannel(new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH));
 //        }
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setHomeAsUpIndicator(R.drawable.ic_baseline_menu_24px);
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setHomeAsUpIndicator(R.drawable.ic_baseline_menu_24px);
+        }
+
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
         userRef = db.collection("users").document(mAuth.getUid());
+
+
         userGroups = new ArrayList<>();
         groupIDs = new ArrayList<>();
+
+
         groupsRef = db.collection("groups");
-        if (getIntent().getExtras() != null) {
+
+        if (getIntent().getExtras() != null)
+        {
             Log.d("demo", "clicked thingy with extras");
-            for (String key : getIntent().getExtras().keySet()) {
+
+            for (String key : getIntent().getExtras().keySet())
+            {
                 Object value = getIntent().getExtras().get(key);
                 Log.d("demo", "Key: " + key + " Value: " + value);
 
             }
-            if (getIntent().getStringExtra("groupID") != null) {
+            if (getIntent().getStringExtra("groupID") != null)
+            {
                 Log.d("demo", "inside groupId Intent thing: " + getIntent().getStringExtra("groupID"));
                 String groupId = getIntent().getStringExtra("groupID");
                 try {
                     MessageHistoryUtil.clearGroupHistory(this, groupId);
-                } catch (IOException e) {
+                }
+                catch (IOException e)
+                {
                     e.printStackTrace();
                 }
 
                 Intent intent = new Intent(this, ChatActivity.class);
                 intent.putExtra("groupID", groupId);
                 startActivity(intent);
-            } else {
+
+            } else
+                {
                 Log.d("demo", "in else of getIntent checks");
-                if (getIntent().getStringExtra("link") != null) {
+                if (getIntent().getStringExtra("link") != null)
+                {
                     Log.d("demo", "inside link Intent thing: " + getIntent().getStringExtra("link"));
                     String url = getIntent().getStringExtra("link");
                     Intent i = new Intent(Intent.ACTION_VIEW);
@@ -119,18 +144,15 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
             // Create channel to show notifications.
             String channelId = getString(R.string.default_notification_channel_id);
             String channelName = "chat";
-            NotificationManager notificationManager =
-                    getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(new NotificationChannel(channelId,
-                    channelName, NotificationManager.IMPORTANCE_LOW));
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW));
         }
         mRecyclerView = findViewById(R.id.groupNameRecyclerView);
         final LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
         adapter = new GroupNameAdapter(this, userGroups);
         adapter.setClickListener(this);
-        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mRecyclerView.getContext(),
-                mLayoutManager.getOrientation());
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mRecyclerView.getContext(), mLayoutManager.getOrientation());
         mRecyclerView.addItemDecoration(dividerItemDecoration);
         mRecyclerView.setAdapter(adapter);
 
@@ -172,14 +194,14 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
                 });
     }
 
-    public void subscriptionHandler() {
+    private void subscriptionHandler() {
         for (String groupthing : groupIDs) {
             FirebaseMessaging.getInstance().subscribeToTopic(groupthing);
         }
     }
 
 
-    public void getGroupIDs() {
+    private void getGroupIDs() {
         userRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 if (task.getResult().exists()) {
@@ -211,9 +233,14 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
         });
     }
 
-    public void getGroupNames(final List<String> mGroupIDs) {
+
+
+
+
+    private void getGroupNames(final List<String> mGroupIDs) {
         groupsRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
+
                 for (DocumentSnapshot document : task.getResult()) {
                     if (task.isSuccessful()) {
                         String mID = document.getId();
@@ -227,6 +254,7 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
                         }
                     }
                 }
+
                 subscriptionHandler();
                 adapter.notifyDataSetChanged();
             }
@@ -236,6 +264,7 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
         switch (item.getItemId()) {
             case R.id.sign_out:
                 SharedPreferences prefs = getSharedPreferences("info", MODE_PRIVATE);
@@ -278,7 +307,8 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
     }
 
 
-    public void clearNotifications() {
+    public void clearNotifications()
+    {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
         notificationManager.cancelAll();
     }

@@ -22,33 +22,51 @@ import java.util.Map;
 import java.util.Random;
 
 public class CreateGroupActivity extends AppCompatActivity {
+
+
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
+
     private List<String> members;
     private List<String> memberEmails;
+
     private CollectionReference usersRef;
     private Map<String, Object> data;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setTheme(R.style.LinkDumpDark);
         setContentView(R.layout.activity_create_group);
+
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
+
+
         usersRef = db.collection("users");
+
+
         memberEmails = new ArrayList<>();
         members = new ArrayList<>();
         data = new HashMap<>();
 
         Button button = findViewById(R.id.createGroupButton);
+
+
+
+
         final EditText groupName = findViewById(R.id.groupNameEditText);
         final EditText member1 = findViewById(R.id.groupMemberEditText1);
         final EditText member2 = findViewById(R.id.groupMemberEditText2);
         final EditText member3 = findViewById(R.id.groupMemberEditText3);
         final EditText member4 = findViewById(R.id.groupMemberEditText4);
         final EditText member5 = findViewById(R.id.groupMemberEditText5);
+
+
+
+
 
 
         button.setOnClickListener(v -> {
@@ -83,7 +101,15 @@ public class CreateGroupActivity extends AppCompatActivity {
 
 
         });
+
+
+
     }
+
+
+
+
+
 
     public void addGroupToDB(final List<String> memberIDs) {
         memberIDs.add(mAuth.getUid());
@@ -123,6 +149,11 @@ public class CreateGroupActivity extends AppCompatActivity {
         }));
     }
 
+
+
+
+
+
     public void checkMemberInDB(final List<String> memberEmail) {
         db.collection("users").get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
@@ -140,7 +171,9 @@ public class CreateGroupActivity extends AppCompatActivity {
         });
     }
 
-    public void subscribeAllMembers(List<String> memberIds) {
+    public void subscribeAllMembers(List<String> memberIds)
+    {
+
     }
 
     public void addMemberToList(String userID) {

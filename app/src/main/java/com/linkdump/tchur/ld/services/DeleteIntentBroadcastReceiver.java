@@ -14,6 +14,7 @@ import java.io.IOException;
  * Bow down to my greatness.
  */
 public class DeleteIntentBroadcastReceiver extends BroadcastReceiver {
+
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d("demo", "in deleteIntent");

@@ -1,42 +1,35 @@
 package com.linkdump.tchur.ld.activities;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v13.view.inputmethod.EditorInfoCompat;
-import android.support.v13.view.inputmethod.InputConnectionCompat;
 import android.support.v13.view.inputmethod.InputContentInfoCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.os.BuildCompat;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputConnection;
 import android.webkit.URLUtil;
-import android.widget.EditText;
 import android.widget.ImageButton;
 
-import com.google.firebase.auth.FirebaseAuth;
+
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.SetOptions;
 import com.linkdump.tchur.ld.R;
+import com.linkdump.tchur.ld.abstractions.IActivityContainer;
+import com.linkdump.tchur.ld.data.ChatActivityContainer;
+import com.linkdump.tchur.ld.ui.ChatViewCoordinator;
 import com.linkdump.tchur.ld.adapters.GroupChatAdapter;
+import com.linkdump.tchur.ld.adapters.IntentAdapter;
 import com.linkdump.tchur.ld.adapters.NewGroupChatAdapter;
 import com.linkdump.tchur.ld.objects.Message;
+import com.linkdump.tchur.ld.persistence.FirebaseDbContext;
 import com.linkdump.tchur.ld.utils.MyEditText;
 import com.linkedin.urls.Url;
 import com.linkedin.urls.detection.UrlDetector;
@@ -54,140 +47,74 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.ItemClickListener, NewGroupChatAdapter.ItemClickListener {
-    private static String TAG = "ChatActivity";
-    private static String OG_REGEX = "og:image|og:title|og:description|og:type|og:url|og:video";
+public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.ItemClickListener,
+                                                                NewGroupChatAdapter.ItemClickListener,
+                                                                MyEditText.KeyBoardInputCallbackListener,
+                                                                ImageButton.OnClickListener,
+                                                                MyEditText.OnKeyListener {
 
-    private RecyclerView mRecyclerView;
-    private NewGroupChatAdapter adapter;
-    private ArrayList<String> events;
-    private FirebaseFirestore db;
-    private FirebaseAuth mAuth;
-    private String currentGroup;
-    private String groupName;
-    private List<Message> messages;
-    private DocumentReference userRef;
-    private List<String> userGroups;
+
+    //Data
+    private ChatActivityContainer chatActivityContainer;
+
+    //Config
     private SharedPreferences prefs;
-    private LinearLayoutManager mLayoutManager;
-    private DocumentReference groupRef;
-    private ImageButton imageButton;
-    private MyEditText chatEditText;
+
+    //Persistence
+    private FirebaseDbContext firebaseDbContext;
+
+    //Ui
+    private ChatViewCoordinator chatViewCoordinator;
+
+    //EventHandlers/Logic
+    //TO BE IMPLEMENTED TYLOR, DAMN STOP RUSHING ME
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_chat);
+
+
+        chatViewCoordinator = new ChatViewCoordinator(getApplicationContext(), this);
+        firebaseDbContext = new FirebaseDbContext(getApplicationContext());
+        chatActivityContainer = new ChatActivityContainer(getApplicationContext());
+
+        chatViewCoordinator.initialiseViewFromXml(R.layout.activity_chat);
+        setContentView(chatViewCoordinator.getRootView());
+
         clearNotifications();
 
+       /* IntentAdapter.Begin()
+                .SetIntent(getIntent())
+                .GetFromExtra(chatActivityContainer.getCurrentGroup(), (i) -> i.getStringExtra("groupID"))
+                .GetFromExtra(chatActivityContainer.getGroupName(), (i) -> i.getStringExtra("groupName"))
+                .Deserialize();*/
 
-        db = FirebaseFirestore.getInstance();
-        mAuth = FirebaseAuth.getInstance();
-        userRef = db.collection("users").document(mAuth.getUid());
-        messages = new ArrayList<>();
+
+
         Intent intent = getIntent();
-        currentGroup = intent.getStringExtra("groupID");
-        groupName = intent.getStringExtra("groupName");
-        groupRef = db.collection("groups").document(currentGroup);
-        prefs = this.getSharedPreferences(
-                getPackageName(), MODE_PRIVATE);
+        chatActivityContainer.setCurrentGroup(intent.getStringExtra("groupID"));
+        chatActivityContainer.setCurrentGroup(intent.getStringExtra("groupName"));
 
-        prefs.edit().putString("currentGroup", currentGroup).apply();
-
-        events = new ArrayList<>();
-        userGroups = new ArrayList<>();
-        mRecyclerView = findViewById(R.id.chat_recyclerview);
-        mLayoutManager = new LinearLayoutManager(this);
-        mLayoutManager.setStackFromEnd(true);
-        mRecyclerView.setLayoutManager(mLayoutManager);
-        adapter = new NewGroupChatAdapter(this, messages);
-        adapter.setClickListener(this);
-        adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
-            @Override
-            public void onItemRangeInserted(int positionStart, int itemCount) {
-                mLayoutManager.smoothScrollToPosition(mRecyclerView, null, adapter.getItemCount());
-            }
-        });
-        mRecyclerView.setAdapter(adapter);
-        groupChatListener(currentGroup);
-        Toolbar toolbar = findViewById(R.id.chatToolbar);
-        setSupportActionBar(toolbar);
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.setTitle(groupName);
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setHomeAsUpIndicator(R.drawable.ic_baseline_arrow_back_24px);
-
-        imageButton = findViewById(R.id.imageButton);
-        chatEditText = findViewById(R.id.chat_message_edit_text);
-        chatEditText.setKeyBoardInputCallbackListener((inputContentInfo, flags, opts) -> {
-            if (inputContentInfo.getLinkUri() != null) {
-                Log.d(TAG, String.valueOf(inputContentInfo.getLinkUri()));
-                Map<String, Object> sendMessage = new HashMap<>();
-                sendMessage.put("user", mAuth.getUid());
-                sendMessage.put("userName", mAuth.getCurrentUser().getDisplayName());
-                sendMessage.put("sentTime", Calendar.getInstance().getTimeInMillis());
-                sendMessage.put("imageUrl", inputContentInfo.getLinkUri().toString());
-                sendMessage.put("messageType", "IMAGE");
-                groupRef.collection("messages").add(sendMessage);
-            }
-
-        });
+        prefs = this.getSharedPreferences(getPackageName(), MODE_PRIVATE);
+        prefs.edit().putString("currentGroup",chatActivityContainer.getCurrentGroup()).apply();
 
 
+        groupChatListener(chatActivityContainer.getCurrentGroup());
 
-        imageButton.setOnClickListener(view -> {
-            if (!chatEditText.getText().toString().equals("")) {
-                Boolean hasLink = false;
-                String url = "";
-                UrlDetector detector = new UrlDetector(chatEditText.getText().toString(), UrlDetectorOptions.Default);
-                List<Url> urls = detector.detect();
-                if (!urls.isEmpty()) {
-                    hasLink = true;
-                    url = urls.get(0).getFullUrl();
-                }
-                Map<String, Object> sendMessage = new HashMap<>();
-                sendMessage.put("message", chatEditText.getText() + "");
-                sendMessage.put("user", mAuth.getUid());
-                sendMessage.put("userName", mAuth.getCurrentUser().getDisplayName());
-                sendMessage.put("sentTime", Calendar.getInstance().getTimeInMillis());
-                sendMessage.put("messageType", "TEXT");
+        chatViewCoordinator.chatEditText.setKeyBoardInputCallbackListener(this);
+        chatViewCoordinator.chatEditText.setOnKeyListener(this);
+        chatViewCoordinator.imageButton.setOnClickListener(this);
 
-                Boolean finalHasLink = hasLink;
-                String finalUrl = url;
-                Log.d(TAG, "url before message push: " + finalUrl);
-                Log.d(TAG, "before database push");
-                groupRef.collection("messages").add(sendMessage).addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Log.d(TAG, "Successfully pushed");
-                        DocumentReference messageRef = task.getResult();
-                        if (finalHasLink) {
-                            Log.d(TAG, "found Link in text");
-                            new JsoupAsyncTask().execute(finalUrl, messageRef.getId());
-                        }
-                    }
-                });
-                chatEditText.getText().clear();
-            }
-        });
-        chatEditText.setOnKeyListener((v, keyCode, event) -> {
-            if (event.getAction() == KeyEvent.ACTION_DOWN) {
-                switch (keyCode) {
-                    case KeyEvent.KEYCODE_DPAD_CENTER:
-                    case KeyEvent.KEYCODE_ENTER:
-                        imageButton.callOnClick();
-                        return true;
-                    default:
-                        break;
-                }
-            }
-            return false;
-        });
     }
+
+
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // handle arrow click here
         if (item.getItemId() == android.R.id.home) {
             finish(); // close this activity and return to preview activity (if there is any)
         }
@@ -195,50 +122,68 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         return super.onOptionsItemSelected(item);
     }
 
+
+
+
+
     public void groupChatListener(String currentGroup) {
-        db.collection("groups").document(currentGroup).collection("messages").orderBy("sentTime", Query.Direction.DESCENDING).limit(25).addSnapshotListener((queryDocumentSnapshots, e) -> {
-            if (e != null) {
+        firebaseDbContext.getDb().collection("groups")
+                .document(currentGroup)
+                .collection("messages")
+                .orderBy("sentTime", Query.Direction.DESCENDING)
+                .limit(25)
+                .addSnapshotListener((queryDocumentSnapshots, e) ->
+                {
+            if (e != null)
+            {
                 Log.w("demo", "Listener Failed", e);
                 return;
             }
 
-            for (DocumentChange doc : queryDocumentSnapshots.getDocumentChanges()) {
+            for (DocumentChange doc : Objects.requireNonNull(queryDocumentSnapshots).getDocumentChanges()) {
                 QueryDocumentSnapshot mDoc = doc.getDocument();
                 Log.d("demo", mDoc.get("message") + "");
                 Message tempMessage = mDoc.toObject(Message.class);
-                if (!tempMessage.getUser().equals(mAuth.getUid())) {
+                if (!tempMessage.getUser().equals(firebaseDbContext.getAuth().getUid())) {
                     tempMessage.setIsUser(false);
                 } else {
                     tempMessage.setIsUser(true);
                 }
                 boolean exists = false;
-                for (int i = 0; i < messages.size(); i++) {
-                    if (messages.get(i).getSentTime() == tempMessage.getSentTime()) {
-                        messages.set(i, tempMessage);
+                for (int i = 0; i < firebaseDbContext.getMessages().size(); i++) {
+                    if (firebaseDbContext.getMessages().get(i).getSentTime() == tempMessage.getSentTime()) {
+                        firebaseDbContext.getMessages().set(i, tempMessage);
                         exists = true;
                     }
                 }
                 if (!exists) {
-                    messages.add(tempMessage);
-                    events.add(mDoc.getString("message"));
+                    firebaseDbContext.getMessages().add(tempMessage);
+                    firebaseDbContext.getEvents().add(mDoc.getString("message"));
                 }
             }
-            Collections.sort(messages);
-            adapter.notifyDataSetChanged();
+
+
+
+            Collections.sort(firebaseDbContext.getMessages());
+            chatViewCoordinator.adapter.notifyDataSetChanged();
 //            adapter.notifyItemInserted(adapter.getItemCount() - 1);
-            mLayoutManager.scrollToPosition(messages.size() - 1);
+            chatViewCoordinator.mLayoutManager.scrollToPosition(firebaseDbContext.getMessages().size() - 1);
         });
     }
+
+
+
 
     @Override
     public void onItemClick(View view, int position) {
 
     }
 
+
     @Override
     protected void onResume() {
         super.onResume();
-        prefs.edit().putString("currentGroup", currentGroup).apply();
+        prefs.edit().putString("currentGroup", ChatActivityContainer.getTAG()).apply();
     }
 
     @Override
@@ -258,7 +203,80 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         notificationManager.cancel(0);
     }
 
+    @Override
+    public void onCommitContent(InputContentInfoCompat inputContentInfo, int flags, Bundle opts) {
+
+        if (inputContentInfo.getLinkUri() != null) {
+            Log.d(ChatActivityContainer.getTAG(), String.valueOf(inputContentInfo.getLinkUri()));
+
+            Map<String, Object> sendMessage = new HashMap<>();
+
+            sendMessage.put("user", Objects.requireNonNull(firebaseDbContext.getAuth().getUid()));
+            sendMessage.put("userName", firebaseDbContext.getAuth().getCurrentUser().getDisplayName());
+            sendMessage.put("sentTime", Calendar.getInstance().getTimeInMillis());
+            sendMessage.put("imageUrl", inputContentInfo.getLinkUri().toString());
+            sendMessage.put("messageType", "IMAGE");
+
+            firebaseDbContext.groupRef.collection("messages").add(sendMessage);
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (!chatViewCoordinator.chatEditText.getText().toString().equals("")) {
+            Boolean hasLink = false;
+            String url = "";
+            UrlDetector detector = new UrlDetector(chatViewCoordinator.chatEditText.getText().toString(), UrlDetectorOptions.Default);
+            List<Url> urls = detector.detect();
+            if (!urls.isEmpty()) {
+                hasLink = true;
+                url = urls.get(0).getFullUrl();
+            }
+            Map<String, Object> sendMessage = new HashMap<>();
+            sendMessage.put("message", chatViewCoordinator.chatEditText.getText() + "");
+            sendMessage.put("user", Objects.requireNonNull(firebaseDbContext.getAuth().getUid()));
+            sendMessage.put("userName", firebaseDbContext.getAuth().getCurrentUser().getDisplayName());
+            sendMessage.put("sentTime", Calendar.getInstance().getTimeInMillis());
+            sendMessage.put("messageType", "TEXT");
+
+            Boolean finalHasLink = hasLink;
+            String finalUrl = url;
+            Log.d(ChatActivityContainer.getTAG(), "url before message push: " + finalUrl);
+            Log.d(ChatActivityContainer.getTAG(), "before database push");
+
+            firebaseDbContext.groupRef.collection("messages").add(sendMessage).addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    Log.d(ChatActivityContainer.getTAG(), "Successfully pushed");
+                    DocumentReference messageRef = task.getResult();
+                    if (finalHasLink) {
+                        Log.d(ChatActivityContainer.getTAG(), "found Link in text");
+                        new JsoupAsyncTask().execute(finalUrl, messageRef.getId());
+                    }
+                }
+            });
+            chatViewCoordinator.chatEditText.getText().clear();
+        }
+    }
+
+    @Override
+    public boolean onKey(View v, int keyCode, KeyEvent event) {
+        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_DPAD_CENTER:
+                case KeyEvent.KEYCODE_ENTER:
+                    chatViewCoordinator.imageButton.callOnClick();
+                    return true;
+                default:
+                    break;
+            }
+        }
+        return false;
+    }
+
+
+
     public class JsoupAsyncTask extends AsyncTask<String, Void, Map<String, String>> {
+
         private final String TAG = JsoupAsyncTask.class.getSimpleName();
         private String messageId = null;
 
@@ -281,9 +299,12 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 e.printStackTrace();
             }
             if (doc != null) {
+
                 Log.d(TAG, doc.title());
                 Boolean hasSchemaThing = false;
-                if (doc.attr("itemprop") != null) {
+
+                if (doc.attr("itemprop") != null)
+                {
                     hasSchemaThing = true;
                 }
                 Element headElement = doc.head();
@@ -291,8 +312,8 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 Log.d(TAG, "all meta elements: " + metaElements.toString());
                 Map<String, String> ogTags = new HashMap<>();
                 for (Element e : metaElements) {
-                    if (e.attributes().get("property").matches(OG_REGEX) ||
-                            e.attributes().get("Property").matches(OG_REGEX)) {
+                    if (e.attributes().get("property").matches(ChatActivityContainer.getOgRegex()) ||
+                            e.attributes().get("Property").matches(ChatActivityContainer.getOgRegex())) {
                         ogTags.put(e.attr("property"), e.attr("content"));
                         Log.d(TAG, e.attr("content"));
                     }
@@ -309,35 +330,45 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         protected void onPostExecute(Map<String, String> s) {
             if (s != null) {
                 Log.d(TAG, "Map in onPostExecute: " + s.toString());
-                groupRef.collection("messages").document(messageId).get().addOnCompleteListener(task -> {
+                firebaseDbContext.groupRef.collection("messages")
+                                          .document(messageId)
+                                          .get()
+                                          .addOnCompleteListener(task ->
+                        {
                     if ((task.getResult() != null) && task.isSuccessful()) {
                         Map<String, Object> data;
                         DocumentSnapshot message = task.getResult();
                         data = message.getData();
                         if (!s.isEmpty()) {
                             data.put("messageType", "LINK");
-                            if (s.get("og:image") != null) {
+                            if (s.get("og:image") != null)
+                            {
                                 data.put("linkImage", s.get("og:image"));
                             }
-                            if (s.get("og:title") != null) {
+                            if (s.get("og:title") != null)
+                            {
                                 data.put("linkTitle", s.get("og:title"));
                             }
-                            if (s.get("og:description") != null) {
+                            if (s.get("og:description") != null)
+                            {
                                 data.put("linkDescription", s.get("og:description"));
                             }
-                            if (s.get("og:url") != null) {
+                            if (s.get("og:url") != null)
+                            {
                                 data.put("linkUrl", s.get("og:url"));
                             }
-                            if (s.get("og:video") != null) {
+                            if (s.get("og:video") != null)
+                            {
                                 data.put("linkVideo", s.get("og:video"));
                             }
                         } else {
-                            if (data.get("imageLink") == null) {
+                            if (data.get("imageLink") == null)
+                            {
                                 data.put("messageType", "TEXT");
                             }
                         }
 
-                        DocumentReference messageRef = groupRef.collection("messages").document(messageId);
+                        DocumentReference messageRef = firebaseDbContext.groupRef.collection("messages").document(messageId);
                         messageRef.set(data, SetOptions.merge());
                         Log.d(TAG, "in post execute DB call");
                     }

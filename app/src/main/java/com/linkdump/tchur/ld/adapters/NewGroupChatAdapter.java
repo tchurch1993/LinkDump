@@ -281,6 +281,7 @@ public class NewGroupChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
     // stores and recycles views as they are scrolled off screen
     public class DefaultViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+
         TextView myMessageTextView;
         TextView theirMessageTextView;
         TextView userName;
@@ -405,7 +406,6 @@ public class NewGroupChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
     private String getFormat(String url) {
         int formatBeginIndex = url.lastIndexOf(".");
-        String format = url.substring(formatBeginIndex, url.length());
-        return format;
+        return url.substring(formatBeginIndex);
     }
 }
