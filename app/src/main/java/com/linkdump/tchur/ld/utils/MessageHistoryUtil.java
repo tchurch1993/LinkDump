@@ -20,6 +20,8 @@ import java.util.Collections;
  * Created by tchurh on 12/19/2018.
  * Bow down to my greatness.
  */
+
+//TODO: Check to see what is actually needed and scrap the rest
 public final class MessageHistoryUtil {
     private static String TAG = "MessageHistoryUtil";
 

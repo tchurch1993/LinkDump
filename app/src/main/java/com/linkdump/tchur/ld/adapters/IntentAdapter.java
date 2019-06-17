@@ -9,7 +9,7 @@ import com.linkdump.tchur.ld.abstractions.IIntentAdapter;
 import java.lang.reflect.Type;
 import java.util.function.Function;
 
-
+//TODO: Explain to me wtf this does
 public class IntentAdapter<T> implements IIntentAdapter {
 
 

@@ -34,6 +34,7 @@ import com.linkdump.tchur.ld.R;
 import java.util.HashMap;
 import java.util.Map;
 
+// This activity needed to be cleaned up for expandability and flexibility
 public class LoginActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
@@ -144,6 +145,7 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    // TODO: Get Google auth working
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
         Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
         // [START_EXCLUDE silent]

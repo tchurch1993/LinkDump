@@ -275,7 +275,9 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
 
 
 
-    public class JsoupAsyncTask extends AsyncTask<String, Void, Map<String, String>> {
+    // This entire class is to grab the meta data of a website and grab the image, title, and description
+    //TODO: Offload this to an API since I do not want the user to practically have a web page downloaded and parsed in the background if I dont need it to
+        public class JsoupAsyncTask extends AsyncTask<String, Void, Map<String, String>> {
 
         private final String TAG = JsoupAsyncTask.class.getSimpleName();
         private String messageId = null;
@@ -286,9 +288,14 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
             messageId = strings[1];
             Document doc = null;
             try {
+                // this first tried to contact the URL using http
                 Log.d(TAG, "first URL is: " + guessedUrl);
+                // grab HTML (not sure how much text actually gets grabbed but I think it might hit the limit
+                // good thing the head is at the beginning of the webpage :)
                 doc = Jsoup.connect(guessedUrl).get();
             } catch (IOException e) {
+                // if http does not work we retry using https. Probably a better way to do this other than
+                // waiting for an exception to do the https portion but hey, it works
                 guessedUrl = guessedUrl.replace("http", "https");
                 Log.d(TAG, "second URL after http replaced with https is: " + guessedUrl);
                 try {
@@ -307,10 +314,12 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 {
                     hasSchemaThing = true;
                 }
+                //this seperated the head element from the response string
                 Element headElement = doc.head();
                 Elements metaElements = headElement.getElementsByAttribute("property");
                 Log.d(TAG, "all meta elements: " + metaElements.toString());
                 Map<String, String> ogTags = new HashMap<>();
+                // grabs the meta data that matches the REGEX expression
                 for (Element e : metaElements) {
                     if (e.attributes().get("property").matches(ChatActivityContainer.getOgRegex()) ||
                             e.attributes().get("Property").matches(ChatActivityContainer.getOgRegex())) {
@@ -328,6 +337,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
 
         @Override
         protected void onPostExecute(Map<String, String> s) {
+            // Takes the map of iamge, title, and description and pushes it into the DB into a message format
             if (s != null) {
                 Log.d(TAG, "Map in onPostExecute: " + s.toString());
                 firebaseDbContext.groupRef.collection("messages")

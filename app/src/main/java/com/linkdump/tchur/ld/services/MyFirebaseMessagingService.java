@@ -175,7 +175,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         }
         String sender = data.get("sender");
         String title = data.get("title");
-        Long sentTime = Long.parseLong(data.get("sentTime"));
+        long sentTime = Long.parseLong(data.get("sentTime"));
         assert groupReqCode != null;
         int intGroupReCode = Integer.parseInt(groupReqCode);
         Log.d(TAG, "req code from FCM: " + groupReqCode);

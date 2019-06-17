@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
     private GroupNameAdapter adapter;
 
     //Constants
-    private final String NO_GROUP_STRING = "No Groups Found";
+    private final String NO_GROUP_STRING = "No Groups Found"; //Probably should make this a resource string
 
 
     @Override
@@ -140,6 +140,8 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
         }
 
         getGroupIDs();
+
+        //TODO: Change name of notification group to something other than "chat"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // Create channel to show notifications.
             String channelId = getString(R.string.default_notification_channel_id);
@@ -190,10 +192,13 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
                     // Add code here to update the UI based on the item selected
                     // For example, swap UI fragments here
 
+                    //ewww, fragments
+
                     return true;
                 });
     }
 
+    // probably need to find a better way to do this
     private void subscriptionHandler() {
         for (String groupthing : groupIDs) {
             FirebaseMessaging.getInstance().subscribeToTopic(groupthing);
