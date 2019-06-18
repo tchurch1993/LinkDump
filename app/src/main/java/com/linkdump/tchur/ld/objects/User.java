@@ -4,9 +4,9 @@ import com.linkdump.tchur.ld.abstractions.IClient;
 
 public class User implements IClient {
 
-    public String UserName;
-    public String FirstName;
-    public String LastName;
-    public int UserId;
+    public String userName;
+    public String firstName;
+    public String lastName;
+    public int userId;
 
 }

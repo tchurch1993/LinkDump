@@ -3,14 +3,6 @@ package com.linkdump.tchur.ld.ui;
 import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-<<<<<<< Updated upstream
-
-class LoginViewCoordinator extends ViewCoordinator {
-
-
-    public LoginViewCoordinator(Context context, AppCompatActivity appCompatActivity) {
-        super(context, appCompatActivity);
-=======
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -29,15 +21,12 @@ public class LoginViewCoordinator extends ViewCoordinator {
 
     public LoginViewCoordinator(Context context, AppCompatActivity appCompatActivity) {
         super(context, appCompatActivity);
-
->>>>>>> Stashed changes
     }
+
 
     @Override
     public void PostViewInit(View view) {
-<<<<<<< Updated upstream
-           
-=======
+
         editTextUsername = rootView.findViewById(R.id.editTextEmail);
         editTextPassword = rootView.findViewById(R.id.editTextPassword);
         progressBar = rootView.findViewById(R.id.progressBar);
@@ -46,13 +35,12 @@ public class LoginViewCoordinator extends ViewCoordinator {
         googleSignInButton = rootView.findViewById(R.id.googleSignInButton);
 
 
-
         editTextUsername.setTag("editTextUsername");
         editTextPassword.setTag("editTextPassword");
         progressBar.setTag("progressBar");
         signUpButton.setTag("signUpButton");
         loginButton.setTag("loginButton");
         googleSignInButton.setTag("googleSignInButton");
->>>>>>> Stashed changes
+
     }
 }

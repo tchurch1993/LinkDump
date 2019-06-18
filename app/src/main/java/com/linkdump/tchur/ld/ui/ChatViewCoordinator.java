@@ -16,6 +16,8 @@ import com.linkdump.tchur.ld.utils.MyEditText;
 
 public class ChatViewCoordinator extends ViewCoordinator {
 
+
+
     public RecyclerView mRecyclerView;
     public LinearLayoutManager mLayoutManager;
     public ImageButton imageButton;
@@ -23,16 +25,12 @@ public class ChatViewCoordinator extends ViewCoordinator {
     public Toolbar toolbar;
     public NewGroupChatAdapter adapter;
 
-    public IOnCompletedListener onCompletedListener;
 
-    public ChatViewCoordinator(Context context, AppCompatActivity appCompatActivity) {
-        super(context,appCompatActivity);
+    public ChatViewCoordinator(Context context, AppCompatActivity appCompatActivity)
+    {
+        super(context, appCompatActivity);
     }
 
-    public ChatViewCoordinator registerOnCompletedListener(IOnCompletedListener listener){
-        this.onCompletedListener = listener;
-        return this;
-    }
 
     @Override
     public void PostViewInit(View view) {
@@ -67,8 +65,6 @@ public class ChatViewCoordinator extends ViewCoordinator {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setHomeAsUpIndicator(R.drawable.ic_baseline_arrow_back_24px);
         }
-
-
 
 
     }

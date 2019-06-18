@@ -1,9 +1,9 @@
 package com.linkdump.tchur.ld.handlers;
 
-import com.linkdump.tchur.ld.IHandleCanceled;
-import com.linkdump.tchur.ld.IHandleCompleted;
-import com.linkdump.tchur.ld.IHandleFailure;
-import com.linkdump.tchur.ld.IHandleSuccess;
+import com.linkdump.tchur.ld.abstractions.eventbased.IHandleCanceled;
+import com.linkdump.tchur.ld.abstractions.eventbased.IHandleCompleted;
+import com.linkdump.tchur.ld.abstractions.eventbased.IHandleFailure;
+import com.linkdump.tchur.ld.abstractions.eventbased.IHandleSuccess;
 
 public class GetMessagesTaskHandler implements IHandleCanceled, IHandleCompleted, IHandleFailure, IHandleSuccess {
 

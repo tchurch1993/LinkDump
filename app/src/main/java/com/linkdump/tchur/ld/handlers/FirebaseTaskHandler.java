@@ -2,20 +2,11 @@ package com.linkdump.tchur.ld.handlers;
 
 
 
-import android.support.annotation.NonNull;
-
-import com.google.android.gms.tasks.OnCanceledListener;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.linkdump.tchur.ld.IHandleCanceled;
-import com.linkdump.tchur.ld.IHandleCompleted;
-import com.linkdump.tchur.ld.IHandleFailure;
-import com.linkdump.tchur.ld.IHandleSuccess;
-
-
-import java.util.function.Function;
+import com.linkdump.tchur.ld.abstractions.eventbased.IHandleCanceled;
+import com.linkdump.tchur.ld.abstractions.eventbased.IHandleCompleted;
+import com.linkdump.tchur.ld.abstractions.eventbased.IHandleFailure;
+import com.linkdump.tchur.ld.abstractions.eventbased.IHandleSuccess;
 
 public class FirebaseTaskHandler {
 

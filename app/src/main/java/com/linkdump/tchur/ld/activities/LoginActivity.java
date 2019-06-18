@@ -42,10 +42,6 @@ public class LoginActivity extends AppCompatActivity implements Button.OnClickLi
     private LoginViewCoordinator loginViewCoordinator;
     private GoogleAuthManager googleAuthManager;
 
-// This activity needed to be cleaned up for expandability and flexibility
-
-
-public class LoginActivity extends AppCompatActivity {
 
 
     private final String TAG = "Log";
@@ -148,8 +144,6 @@ public class LoginActivity extends AppCompatActivity {
 
 
 
-    private void firebaseAuthWithGoogle(GoogleSignInAccount acct)
-    {
 
     // TODO: Get Google auth working
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
@@ -241,9 +235,6 @@ public class LoginActivity extends AppCompatActivity {
 
 
 
-
-
-
     @Override
     public void onClick(View v)
     {
@@ -283,6 +274,9 @@ public class LoginActivity extends AppCompatActivity {
 
         }
     }
+
+
+
 
     @Override
     public void OnSignInSuccess(Task task) {

@@ -200,6 +200,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
         notificationManager.cancel(0);
     }
+    
 
     @Override
     public void onCommitContent(InputContentInfoCompat inputContentInfo, int flags, Bundle opts) {
@@ -353,11 +354,11 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
 
         @Override
         protected void onPostExecute(Map<String, String> s) {
-<<<<<<< HEAD
 
-=======
+
+
             // Takes the map of iamge, title, and description and pushes it into the DB into a message format
->>>>>>> clean-reformat
+
             if (s != null) {
                 Log.d(TAG, "Map in onPostExecute: " + s.toString());
                 firebaseDbContext.groupRef.collection(FirebaseConstants.MESSAGES)
