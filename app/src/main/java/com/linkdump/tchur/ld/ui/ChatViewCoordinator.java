@@ -10,7 +10,7 @@ import android.view.View;
 import android.widget.ImageButton;
 
 import com.linkdump.tchur.ld.R;
-import com.linkdump.tchur.ld.abstractions.EventBased.IOnCompletedListener;
+import com.linkdump.tchur.ld.abstractions.eventbased.IOnCompletedListener;
 import com.linkdump.tchur.ld.adapters.NewGroupChatAdapter;
 import com.linkdump.tchur.ld.utils.MyEditText;
 

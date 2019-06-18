@@ -23,6 +23,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.SetOptions;
 import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.abstractions.IActivityContainer;
+import com.linkdump.tchur.ld.constants.FirebaseConstants;
 import com.linkdump.tchur.ld.data.ChatActivityContainer;
 import com.linkdump.tchur.ld.ui.ChatViewCoordinator;
 import com.linkdump.tchur.ld.adapters.GroupChatAdapter;
@@ -56,17 +57,11 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                                                                 MyEditText.OnKeyListener {
 
 
-    //Data
-    private ChatActivityContainer chatActivityContainer;
 
-    //Config
-    private SharedPreferences prefs;
-
-    //Persistence
-    private FirebaseDbContext firebaseDbContext;
-
-    //Ui
-    private ChatViewCoordinator chatViewCoordinator;
+    private ChatActivityContainer chatActivityContainer; //Data
+    private SharedPreferences prefs; //Config
+    private FirebaseDbContext firebaseDbContext; //Persistence
+    private ChatViewCoordinator chatViewCoordinator; //Ui
 
     //EventHandlers/Logic
     //TO BE IMPLEMENTED TYLOR, DAMN STOP RUSHING ME
@@ -86,17 +81,10 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
 
         clearNotifications();
 
-       /* IntentAdapter.Begin()
-                .SetIntent(getIntent())
-                .GetFromExtra(chatActivityContainer.getCurrentGroup(), (i) -> i.getStringExtra("groupID"))
-                .GetFromExtra(chatActivityContainer.getGroupName(), (i) -> i.getStringExtra("groupName"))
-                .Deserialize();*/
-
-
-
         Intent intent = getIntent();
         chatActivityContainer.setCurrentGroup(intent.getStringExtra("groupID"));
         chatActivityContainer.setCurrentGroup(intent.getStringExtra("groupName"));
+
 
         prefs = this.getSharedPreferences(getPackageName(), MODE_PRIVATE);
         prefs.edit().putString("currentGroup",chatActivityContainer.getCurrentGroup()).apply();
@@ -115,8 +103,9 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
         if (item.getItemId() == android.R.id.home) {
-            finish(); // close this activity and return to preview activity (if there is any)
+            finish();
         }
 
         return super.onOptionsItemSelected(item);
@@ -127,9 +116,11 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
 
 
     public void groupChatListener(String currentGroup) {
-        firebaseDbContext.getDb().collection("groups")
+
+        firebaseDbContext.getDb()
+                .collection(FirebaseConstants.GROUPS)
                 .document(currentGroup)
-                .collection("messages")
+                .collection(FirebaseConstants.MESSAGES)
                 .orderBy("sentTime", Query.Direction.DESCENDING)
                 .limit(25)
                 .addSnapshotListener((queryDocumentSnapshots, e) ->
@@ -140,22 +131,29 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 return;
             }
 
-            for (DocumentChange doc : Objects.requireNonNull(queryDocumentSnapshots).getDocumentChanges()) {
+            for (DocumentChange doc : Objects.requireNonNull(queryDocumentSnapshots)
+                    .getDocumentChanges()) {
+
                 QueryDocumentSnapshot mDoc = doc.getDocument();
                 Log.d("demo", mDoc.get("message") + "");
                 Message tempMessage = mDoc.toObject(Message.class);
+
                 if (!tempMessage.getUser().equals(firebaseDbContext.getAuth().getUid())) {
                     tempMessage.setIsUser(false);
                 } else {
                     tempMessage.setIsUser(true);
                 }
+
                 boolean exists = false;
-                for (int i = 0; i < firebaseDbContext.getMessages().size(); i++) {
+
+                for (int i = 0; i < firebaseDbContext.getMessages().size(); i++)
+                {
                     if (firebaseDbContext.getMessages().get(i).getSentTime() == tempMessage.getSentTime()) {
                         firebaseDbContext.getMessages().set(i, tempMessage);
                         exists = true;
                     }
                 }
+
                 if (!exists) {
                     firebaseDbContext.getMessages().add(tempMessage);
                     firebaseDbContext.getEvents().add(mDoc.getString("message"));
@@ -207,6 +205,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
     public void onCommitContent(InputContentInfoCompat inputContentInfo, int flags, Bundle opts) {
 
         if (inputContentInfo.getLinkUri() != null) {
+
             Log.d(ChatActivityContainer.getTAG(), String.valueOf(inputContentInfo.getLinkUri()));
 
             Map<String, Object> sendMessage = new HashMap<>();
@@ -223,6 +222,8 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
 
     @Override
     public void onClick(View v) {
+
+
         if (!chatViewCoordinator.chatEditText.getText().toString().equals("")) {
             Boolean hasLink = false;
             String url = "";
@@ -244,7 +245,10 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
             Log.d(ChatActivityContainer.getTAG(), "url before message push: " + finalUrl);
             Log.d(ChatActivityContainer.getTAG(), "before database push");
 
-            firebaseDbContext.groupRef.collection("messages").add(sendMessage).addOnCompleteListener(task -> {
+            firebaseDbContext.groupRef
+                    .collection(FirebaseConstants.MESSAGES)
+                    .add(sendMessage)
+                    .addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     Log.d(ChatActivityContainer.getTAG(), "Successfully pushed");
                     DocumentReference messageRef = task.getResult();
@@ -259,7 +263,8 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
     }
 
     @Override
-    public boolean onKey(View v, int keyCode, KeyEvent event) {
+    public boolean onKey(View v, int keyCode, KeyEvent event)
+    {
         if (event.getAction() == KeyEvent.ACTION_DOWN) {
             switch (keyCode) {
                 case KeyEvent.KEYCODE_DPAD_CENTER:
@@ -282,6 +287,8 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
 
         @Override
         protected Map<String, String> doInBackground(String... strings) {
+
+
             String guessedUrl = URLUtil.guessUrl(strings[0]);
             messageId = strings[1];
             Document doc = null;
@@ -298,7 +305,11 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 }
                 e.printStackTrace();
             }
+
+
+
             if (doc != null) {
+
 
                 Log.d(TAG, doc.title());
                 Boolean hasSchemaThing = false;
@@ -320,25 +331,33 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 }
                 Log.d(TAG, "right before return: " + ogTags.toString());
                 return ogTags;
-            } else {
+            }
+            else
+                {
                 return null;
             }
 
         }
 
+
+
+
         @Override
         protected void onPostExecute(Map<String, String> s) {
+
             if (s != null) {
                 Log.d(TAG, "Map in onPostExecute: " + s.toString());
-                firebaseDbContext.groupRef.collection("messages")
+                firebaseDbContext.groupRef.collection(FirebaseConstants.MESSAGES)
                                           .document(messageId)
                                           .get()
                                           .addOnCompleteListener(task ->
                         {
                     if ((task.getResult() != null) && task.isSuccessful()) {
-                        Map<String, Object> data;
+
+
                         DocumentSnapshot message = task.getResult();
-                        data = message.getData();
+                        Map<String, Object> data = message.getData();
+
                         if (!s.isEmpty()) {
                             data.put("messageType", "LINK");
                             if (s.get("og:image") != null)
@@ -368,7 +387,10 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                             }
                         }
 
-                        DocumentReference messageRef = firebaseDbContext.groupRef.collection("messages").document(messageId);
+                        DocumentReference messageRef = firebaseDbContext.groupRef
+                                .collection(FirebaseConstants.MESSAGES)
+                                .document(messageId);
+
                         messageRef.set(data, SetOptions.merge());
                         Log.d(TAG, "in post execute DB call");
                     }

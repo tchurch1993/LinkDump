@@ -1,8 +1,11 @@
 package com.linkdump.tchur.ld.activities;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -14,6 +17,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.Transaction;
 import com.linkdump.tchur.ld.R;
+import com.linkdump.tchur.ld.adapters.GroupNameAdapter;
+import com.linkdump.tchur.ld.constants.FirebaseConstants;
+import com.linkdump.tchur.ld.persistence.FirebaseDbContext;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,11 +27,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-public class CreateGroupActivity extends AppCompatActivity {
+public class CreateGroupActivity extends AppCompatActivity implements Button.OnClickListener {
 
+    private FirebaseDbContext firebaseDbContext;
 
-    private FirebaseFirestore db;
-    private FirebaseAuth mAuth;
 
     private List<String> members;
     private List<String> memberEmails;
@@ -33,77 +38,41 @@ public class CreateGroupActivity extends AppCompatActivity {
     private CollectionReference usersRef;
     private Map<String, Object> data;
 
+    Button button;
+    EditText groupName;
+    EditText member1;
+    EditText member2;
+    EditText member3;
+    EditText member4;
+    EditText member5;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
+
+        firebaseDbContext = new FirebaseDbContext(getApplicationContext());
         setTheme(R.style.LinkDumpDark);
         setContentView(R.layout.activity_create_group);
 
-        db = FirebaseFirestore.getInstance();
-        mAuth = FirebaseAuth.getInstance();
 
-
-        usersRef = db.collection("users");
+        usersRef = firebaseDbContext.getDb().collection(FirebaseConstants.USERS);
 
 
         memberEmails = new ArrayList<>();
         members = new ArrayList<>();
         data = new HashMap<>();
 
-        Button button = findViewById(R.id.createGroupButton);
 
+        button = findViewById(R.id.createGroupButton);
+        button.setOnClickListener(this);
 
-
-
-        final EditText groupName = findViewById(R.id.groupNameEditText);
-        final EditText member1 = findViewById(R.id.groupMemberEditText1);
-        final EditText member2 = findViewById(R.id.groupMemberEditText2);
-        final EditText member3 = findViewById(R.id.groupMemberEditText3);
-        final EditText member4 = findViewById(R.id.groupMemberEditText4);
-        final EditText member5 = findViewById(R.id.groupMemberEditText5);
-
-
-
-
-
-
-        button.setOnClickListener(v -> {
-
-            if (!groupName.getText().toString().isEmpty()) {
-                data.put("groupName", groupName.getText() + "");
-                data.put("owner", mAuth.getUid());
-                if (!member1.getText().toString().isEmpty()) {
-                    memberEmails.add(member1.getText() + "");
-                }
-                if (!member2.getText().toString().isEmpty()) {
-                    memberEmails.add(member2.getText() + "");
-                }
-                if (!member3.getText().toString().isEmpty()) {
-                    memberEmails.add(member3.getText() + "");
-                }
-                if (!member4.getText().toString().isEmpty()) {
-                    memberEmails.add(member4.getText() + "");
-                }
-                if (!member5.getText().toString().isEmpty()) {
-                    memberEmails.add(member5.getText() + "");
-                }
-                if (memberEmails.size() > 0) {
-                    checkMemberInDB(memberEmails);
-                    finish();
-                } else {
-                    Toast.makeText(CreateGroupActivity.this, "Please Input a Group Member", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(CreateGroupActivity.this, "Please Input a Group Name", Toast.LENGTH_SHORT).show();
-            }
-
-
-        });
-
-
-
+        groupName = findViewById(R.id.groupNameEditText);
+        member1 = findViewById(R.id.groupMemberEditText1);
+        member2 = findViewById(R.id.groupMemberEditText2);
+        member3 = findViewById(R.id.groupMemberEditText3);
+        member4 = findViewById(R.id.groupMemberEditText4);
+        member5 = findViewById(R.id.groupMemberEditText5);
     }
 
 
@@ -111,13 +80,24 @@ public class CreateGroupActivity extends AppCompatActivity {
 
 
 
+
+
+
+
+
+
     public void addGroupToDB(final List<String> memberIDs) {
-        memberIDs.add(mAuth.getUid());
+        memberIDs.add(firebaseDbContext.getAuth().getUid());
         data.put("members", memberIDs);
         Random rand = new Random();
         int reqCode = rand.nextInt();
         data.put("groupReqCode", reqCode);
-        db.collection("groups").add(data).addOnCompleteListener(task -> db.runTransaction((Transaction.Function<Void>) transaction -> {
+
+        firebaseDbContext
+                .getDb()
+                .collection(FirebaseConstants.GROUPS)
+                .add(data).addOnCompleteListener(task ->firebaseDbContext.getDb()
+                .runTransaction((Transaction.Function<Void>) transaction -> {
             if (task.isSuccessful()) {
 
                 ArrayList<DocumentSnapshot> memberSnapshots = new ArrayList<>();
@@ -126,11 +106,14 @@ public class CreateGroupActivity extends AppCompatActivity {
                 }
                 for (int i = 0; i < memberIDs.size(); i++) {
                     List<String> memberGroups;
-                    if (memberSnapshots.get(i).contains("groups")) {
+                    if (memberSnapshots.get(i).contains("groups"))
+                    {
                         memberGroups = (List<String>) memberSnapshots.get(i).get("groups");
                         memberGroups.add(task.getResult().getId());
                         transaction.update(usersRef.document(memberIDs.get(i)), "groups", memberGroups);
-                    } else {
+                    }
+                    else
+                        {
                         memberGroups = new ArrayList<>();
                         memberGroups.add(task.getResult().getId());
                         Log.d("demo", memberIDs.get(i));
@@ -155,7 +138,7 @@ public class CreateGroupActivity extends AppCompatActivity {
 
 
     public void checkMemberInDB(final List<String> memberEmail) {
-        db.collection("users").get().addOnCompleteListener(task -> {
+        firebaseDbContext.getDb().collection("users").get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 for (DocumentSnapshot document : task.getResult()) {
                     String email = document.getString("email");
@@ -178,5 +161,43 @@ public class CreateGroupActivity extends AppCompatActivity {
 
     public void addMemberToList(String userID) {
         members.add(userID);
+    }
+
+    @Override
+    public void onClick(View v) {
+            if (!groupName.getText().toString().isEmpty()) {
+                data.put("groupName", groupName.getText() + "");
+                data.put("owner", firebaseDbContext.getAuth().getUid());
+                if (!member1.getText().toString().isEmpty()) {
+                    memberEmails.add(member1.getText() + "");
+                }
+                if (!member2.getText().toString().isEmpty()) {
+                    memberEmails.add(member2.getText() + "");
+                }
+                if (!member3.getText().toString().isEmpty()) {
+                    memberEmails.add(member3.getText() + "");
+                }
+                if (!member4.getText().toString().isEmpty()) {
+                    memberEmails.add(member4.getText() + "");
+                }
+                if (!member5.getText().toString().isEmpty()) {
+                    memberEmails.add(member5.getText() + "");
+                }
+                if (memberEmails.size() > 0) {
+                    checkMemberInDB(memberEmails);
+                    finish();
+                } else {
+                    Toast.makeText(CreateGroupActivity.this,
+                            "Please Input a Group Member",
+                            Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                Toast.makeText(CreateGroupActivity.this,
+                        "Please Input a Group Name",
+                        Toast.LENGTH_SHORT).show();
+            }
+
+
+
     }
 }
