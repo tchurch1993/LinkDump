@@ -15,6 +15,8 @@ import java.util.List;
  * Created by tchurh on 11/5/2018.
  * Bow down to my greatness.
  */
+
+// I may end up turning this structure into the same type of adapter as the "NewGroupChatAdapter" just for more flexibility with views
 public class GroupNameAdapter extends RecyclerView.Adapter<GroupNameAdapter.ViewHolder> {
 
     private List<String> mData;

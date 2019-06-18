@@ -16,6 +16,8 @@ import com.linkdump.tchur.ld.R;
 import java.util.HashMap;
 import java.util.Map;
 
+//I feel like I should modifiy this at some point but looks good for now
+
 public class SignupActivity extends AppCompatActivity {
 
 

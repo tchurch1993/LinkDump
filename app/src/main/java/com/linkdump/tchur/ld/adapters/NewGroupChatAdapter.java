@@ -30,6 +30,8 @@ import java.util.List;
  * Created by tchurh on 11/5/2018.
  * Bow down to my greatness.
  */
+
+//TODO: Need to rename this to just GroupChatAdapter and have it replace the older one since we are already using this one instead
 public class NewGroupChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final String TAG = NewGroupChatAdapter.class.getSimpleName();
 

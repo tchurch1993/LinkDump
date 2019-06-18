@@ -20,6 +20,8 @@ import java.util.List;
  * Created by tchurh on 11/5/2018.
  * Bow down to my greatness.
  */
+
+//TODO: DELETE THIS ADAPTER AND REPLACE WITH NEW ADAPTER
 public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.ViewHolder> {
 
 

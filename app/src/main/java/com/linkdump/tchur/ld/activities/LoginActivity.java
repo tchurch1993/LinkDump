@@ -42,6 +42,12 @@ public class LoginActivity extends AppCompatActivity implements Button.OnClickLi
     private LoginViewCoordinator loginViewCoordinator;
     private GoogleAuthManager googleAuthManager;
 
+// This activity needed to be cleaned up for expandability and flexibility
+
+
+public class LoginActivity extends AppCompatActivity {
+
+
     private final String TAG = "Log";
 
 
@@ -141,8 +147,13 @@ public class LoginActivity extends AppCompatActivity implements Button.OnClickLi
 
 
 
+
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct)
     {
+
+    // TODO: Get Google auth working
+    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
+
         Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
 
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);

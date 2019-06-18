@@ -77,6 +77,20 @@ public class GoogleAuthManager {
     }
 
 
+    public GoogleAuthManager attemptGoogleSignInAsync(FirebaseAuth auth, String email, String password){
+        auth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(activity, task -> {
+                    if (task.isSuccessful()) {
+                        onSuccess.OnSignInSuccess(task);
+                    }
+                    else {
+                        onFailure.OnSignInFailure(task);
+                    }
+                });
+        return this;
+    }
+
+
     private void firebaseAuthWithGoogle(FirebaseAuth firebaseAuth)
     {
         Log.d(TAG, "firebaseAuthWithGoogle:" + googleSignInAccount.getId());

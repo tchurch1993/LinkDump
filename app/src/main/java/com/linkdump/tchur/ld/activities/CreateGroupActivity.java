@@ -26,8 +26,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+<<<<<<< HEAD
 
 public class CreateGroupActivity extends AppCompatActivity implements Button.OnClickListener {
+=======
+/* Much of this class could be put into an API of sorts to limit the amount of network calls and logic on the users device */
+public class CreateGroupActivity extends AppCompatActivity {
+>>>>>>> clean-reformat
 
     private FirebaseDbContext firebaseDbContext;
 
@@ -74,7 +79,6 @@ public class CreateGroupActivity extends AppCompatActivity implements Button.OnC
         member4 = findViewById(R.id.groupMemberEditText4);
         member5 = findViewById(R.id.groupMemberEditText5);
     }
-
 
 
 
