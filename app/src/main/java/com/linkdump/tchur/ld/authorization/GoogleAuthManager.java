@@ -63,6 +63,9 @@ public class GoogleAuthManager {
 
 
 
+
+
+
     public GoogleAuthManager attemptGoogleSignIn(FirebaseAuth auth, String email, String password) {
         auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(activity, task -> {
