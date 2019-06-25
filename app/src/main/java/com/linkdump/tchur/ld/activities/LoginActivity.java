@@ -27,10 +27,11 @@ import com.google.firebase.auth.UserProfileChangeRequest;
 import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.abstractions.OnGoogleSignInFailure;
 import com.linkdump.tchur.ld.abstractions.OnGoogleSignInSuccess;
+import com.linkdump.tchur.ld.api.ClientManager;
 import com.linkdump.tchur.ld.api.GroupManager;
+import com.linkdump.tchur.ld.api.listeners.TrialListener;
 import com.linkdump.tchur.ld.api.MessageManager;
 import com.linkdump.tchur.ld.authorization.GoogleAuthManager;
-import com.linkdump.tchur.ld.objects.Group;
 import com.linkdump.tchur.ld.persistence.FirebaseDbContext;
 import com.linkdump.tchur.ld.ui.LoginViewCoordinator;
 
@@ -89,6 +90,12 @@ public class LoginActivity extends AppCompatActivity implements Button.OnClickLi
                 .build();
         mGoogleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions);
 
+
+
+        ClientManager.Create(firebaseDbContext)
+                     .OnSuccess(new TrialListener().getResult())
+                     .OnFailure( t -> {    })
+                     .OnCanceled(() -> {    });
 
 
 

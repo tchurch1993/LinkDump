@@ -51,19 +51,15 @@ public class GoogleAuthManager {
      */
 
 
-    public GoogleAuthManager(Context context, AppCompatActivity activity){
-         this.context = context;
+    public GoogleAuthManager(Context context, AppCompatActivity activity) {
+        this.context = context;
     }
 
-    public GoogleAuthManager(Context context, AppCompatActivity activity, OnGoogleSignInSuccess success, OnGoogleSignInFailure failure){
-          this.context = context;
-          this.onSuccess = success;
-          this.onFailure = failure;
+    public GoogleAuthManager(Context context, AppCompatActivity activity, OnGoogleSignInSuccess success, OnGoogleSignInFailure failure) {
+        this.context = context;
+        this.onSuccess = success;
+        this.onFailure = failure;
     }
-
-
-
-
 
 
     public GoogleAuthManager attemptGoogleSignIn(FirebaseAuth auth, String email, String password) {
@@ -71,8 +67,7 @@ public class GoogleAuthManager {
                 .addOnCompleteListener(activity, task -> {
                     if (task.isSuccessful()) {
                         onSuccess.OnSignInSuccess(task);
-                    }
-                    else {
+                    } else {
                         onFailure.OnSignInFailure(task);
                     }
                 });
@@ -80,13 +75,12 @@ public class GoogleAuthManager {
     }
 
 
-    public GoogleAuthManager attemptGoogleSignInAsync(FirebaseAuth auth, String email, String password){
+    public GoogleAuthManager attemptGoogleSignInAsync(FirebaseAuth auth, String email, String password) {
         auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(activity, task -> {
                     if (task.isSuccessful()) {
                         onSuccess.OnSignInSuccess(task);
-                    }
-                    else {
+                    } else {
                         onFailure.OnSignInFailure(task);
                     }
                 });
@@ -94,14 +88,13 @@ public class GoogleAuthManager {
     }
 
 
-    private void firebaseAuthWithGoogle(FirebaseAuth firebaseAuth)
-    {
+    private void firebaseAuthWithGoogle(FirebaseAuth firebaseAuth) {
         Log.d(TAG, "firebaseAuthWithGoogle:" + googleSignInAccount.getId());
 
         authCredential = GoogleAuthProvider.getCredential(googleSignInAccount.getIdToken(), null);
 
         firebaseAuth.signInWithCredential(authCredential)
-                    .addOnCompleteListener(activity, task -> {
+                .addOnCompleteListener(activity, task -> {
                     if (task.isSuccessful()) {
                         // Sign in success, update UI with the signed-in user's information
                         Log.d(TAG, "signInWithCredential:success");
@@ -122,16 +115,16 @@ public class GoogleAuthManager {
 
 
                         Map<String, Object> mUser = new HashMap<>();
-                        if (googleSignInAccount.getGivenName() != null){
+                        if (googleSignInAccount.getGivenName() != null) {
                             mUser.put("firstName", googleSignInAccount.getGivenName());
                         }
-                        if (googleSignInAccount.getFamilyName() != null){
+                        if (googleSignInAccount.getFamilyName() != null) {
                             mUser.put("lastName", googleSignInAccount.getFamilyName());
                         }
-                        if (googleSignInAccount.getEmail() != null){
+                        if (googleSignInAccount.getEmail() != null) {
                             mUser.put("email", googleSignInAccount.getEmail());
                         }
-                        if (googleSignInAccount.getPhotoUrl() != null){
+                        if (googleSignInAccount.getPhotoUrl() != null) {
                             mUser.put("photoUrl", googleSignInAccount.getPhotoUrl());
                         }
 
@@ -153,9 +146,7 @@ public class GoogleAuthManager {
                             }
                         });*/
 
-                    }
-                    else
-                    {
+                    } else {
 
                         // If sign in fails, display a message to the user.
                         Log.w(TAG, "signInWithCredential:failure", task.getException());
@@ -166,9 +157,6 @@ public class GoogleAuthManager {
 
                 });
     }
-
-
-
 
 
     public GoogleSignInClient getGoogleSignInClient() {

@@ -3,12 +3,15 @@ package com.linkdump.tchur.ld.api;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.Transaction;
 import com.linkdump.tchur.ld.activities.CreateGroupActivity;
+import com.linkdump.tchur.ld.api.parent.Manager;
 import com.linkdump.tchur.ld.constants.FirebaseConstants;
 import com.linkdump.tchur.ld.objects.Group;
 import com.linkdump.tchur.ld.objects.User;
@@ -21,14 +24,12 @@ import java.util.Map;
 import java.util.Random;
 import java.util.function.Predicate;
 
-public class GroupManager {
+public class GroupManager extends Manager {
 
 
-    private FirebaseDbContext db;
+     public GroupManager(FirebaseDbContext db) {
+        super(db);
 
-
-    public GroupManager(FirebaseDbContext db) {
-        this.db = db;
     }
 
 
@@ -55,7 +56,7 @@ public class GroupManager {
     public void CreateGroup(final List<String> memberIDs) {
 
         Map<String, Object> data = new HashMap<>();
-        memberIDs.add(db.getAuth().getUid());
+        memberIDs.add(firebaseDbContext.getAuth().getUid());
 
         data.put("members", memberIDs);
 
@@ -64,11 +65,11 @@ public class GroupManager {
         data.put("groupReqCode", reqCode);
 
 
-        db.getDb().collection(FirebaseConstants.GROUPS)
+        firebaseDbContext.getDb().collection(FirebaseConstants.GROUPS)
                 .add(data).addOnCompleteListener(task ->
 
 
-                db.getDb()
+                firebaseDbContext.getDb()
                         .runTransaction((Transaction.Function<Void>) transaction ->
                         {
                             if (task.isSuccessful()) {
@@ -76,7 +77,7 @@ public class GroupManager {
                                 ArrayList<DocumentSnapshot> memberSnapshots = new ArrayList<>();
 
                                 for (String memberID : memberIDs) {
-                                    memberSnapshots.add(transaction.get(db.usersRef.document(memberID)));
+                                    memberSnapshots.add(transaction.get(firebaseDbContext.usersRef.document(memberID)));
                                 }
 
                                 for (int i = 0; i < memberIDs.size(); i++) {
@@ -86,7 +87,7 @@ public class GroupManager {
                                     if (memberSnapshots.get(i).contains("groups")) {
                                         memberGroups = (List<String>) memberSnapshots.get(i).get("groups");
                                         memberGroups.add(task.getResult().getId());
-                                        transaction.update(db.usersRef.document(memberIDs.get(i)), "groups", memberGroups);
+                                        transaction.update(firebaseDbContext.usersRef.document(memberIDs.get(i)), "groups", memberGroups);
 
                                     } else {
 
@@ -96,7 +97,7 @@ public class GroupManager {
                                         Map<String, Object> memberData;
                                         memberData = memberSnapshots.get(i).getData();
                                         memberData.put("groups", memberGroups);
-                                        transaction.set(db.usersRef.document(memberIDs.get(i)), memberData, SetOptions.merge());
+                                        transaction.set(firebaseDbContext.usersRef.document(memberIDs.get(i)), memberData, SetOptions.merge());
                                     }
                                 }
 

@@ -2,6 +2,8 @@ package com.linkdump.tchur.ld.api;
 
 import android.util.Log;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -24,7 +26,8 @@ public class MessageManager {
 
     private FirebaseDbContext db;
 
-
+    private OnSuccessListener successListener;
+    private OnFailureListener failureListener;
     public MessageManager(FirebaseDbContext db) {
         this.db = db;
     }
