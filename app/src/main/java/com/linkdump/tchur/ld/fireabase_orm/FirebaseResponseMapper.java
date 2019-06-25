@@ -13,22 +13,30 @@ import java.lang.reflect.Field;
     -3 THIS WILL ALLOW THE EVENT HANDLERS TO GET PASSED A MAPPER INSTANCE AND KEEP YOU FROM HAVING TO REWRITE YOUR UI EVENT SPECIFIC STUFF (SMILEY FACE)
     TODO: TEACH ME WHAT THIS EVEN MEANS REEEEEEEEEEEEEEEEEEE
 
+     -Tyler this means
+      - that if you use reflection to dynamically map responses to a particular type, your in memory objects and your database objects will always match up
+      - this is important because you may not always use firebase for your database, you want to keep your database and your program as decoupled as possible
 */
-public class FireabaseResponseMapper<T> {
+public class FirebaseResponseMapper<T> {
 
 
 
-    public void MapToFirebaseModel()
-    {
 
-
-
+    private FirebaseResponseMapper(){
 
     }
 
 
 
-    public void MapToDto(DocumentSnapshot snapshot) {
+    public FirebaseResponseMapper Map()
+    {
+          return new FirebaseResponseMapper();
+    }
+
+
+
+
+    public T MapToDto(DocumentSnapshot snapshot) {
 
 
        /* Object someObject = getItSomehow();
@@ -50,6 +58,7 @@ public class FireabaseResponseMapper<T> {
             }
 
         }*/
+       return null;
     }
 
 }

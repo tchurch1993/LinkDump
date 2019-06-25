@@ -7,6 +7,8 @@ public class User implements IClient {
     public String userName;
     public String firstName;
     public String lastName;
-    public int userId;
+    public String email;
+    public int uid;
+
 
 }

@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.UserManager;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -26,7 +27,10 @@ import com.google.firebase.auth.UserProfileChangeRequest;
 import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.abstractions.OnGoogleSignInFailure;
 import com.linkdump.tchur.ld.abstractions.OnGoogleSignInSuccess;
+import com.linkdump.tchur.ld.api.GroupManager;
+import com.linkdump.tchur.ld.api.MessageManager;
 import com.linkdump.tchur.ld.authorization.GoogleAuthManager;
+import com.linkdump.tchur.ld.objects.Group;
 import com.linkdump.tchur.ld.persistence.FirebaseDbContext;
 import com.linkdump.tchur.ld.ui.LoginViewCoordinator;
 
@@ -43,6 +47,10 @@ public class LoginActivity extends AppCompatActivity implements Button.OnClickLi
     private GoogleAuthManager googleAuthManager;
 
 
+    private UserManager userManager;
+    private MessageManager messageManager;
+    private GroupManager groupManager;
+
 
     private final String TAG = "Log";
 
@@ -52,45 +60,38 @@ public class LoginActivity extends AppCompatActivity implements Button.OnClickLi
 
 
 
-
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         firebaseDbContext = new FirebaseDbContext(getApplicationContext());
+
         loginViewCoordinator = new LoginViewCoordinator(getApplicationContext(), this);
         loginViewCoordinator.initialiseViewFromXml(R.layout.activity_login);
-        setContentView(loginViewCoordinator.getRootView());
-        googleAuthManager = new GoogleAuthManager(getApplicationContext(),this,this,this);
+        loginViewCoordinator.signUpButton.setOnClickListener(this);
+        loginViewCoordinator.loginButton.setOnClickListener(this);
+        loginViewCoordinator.googleSignInButton.setOnClickListener(this);
 
+        setContentView(loginViewCoordinator.getRootView());
 
 
         handleNotificationChannels();
-
-
-
-
         sharedPreferences = getSharedPreferences("info", MODE_PRIVATE);
         loginViewCoordinator.editTextUsername.setText(sharedPreferences.getString("email", ""));
 
 
 
+
+        googleAuthManager = new GoogleAuthManager(getApplicationContext(),this,this,this);
         googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build();
-
-
         mGoogleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions);
 
 
 
-        loginViewCoordinator.signUpButton.setOnClickListener(this);
-        loginViewCoordinator.loginButton.setOnClickListener(this);
-        loginViewCoordinator.googleSignInButton.setOnClickListener(this);
+
 
 
     }

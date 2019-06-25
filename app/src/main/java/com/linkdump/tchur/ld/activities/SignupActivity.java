@@ -1,9 +1,12 @@
 package com.linkdump.tchur.ld.activities;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -18,7 +21,7 @@ import java.util.Map;
 
 //I feel like I should modifiy this at some point but looks good for now
 
-public class SignupActivity extends AppCompatActivity {
+public class SignupActivity extends AppCompatActivity implements Button.OnClickListener {
 
 
     EditText editTextEmail, editTextPassword, editTextFirstName, editTextLastName, editTextPasswordConfirm;
@@ -73,13 +76,19 @@ public class SignupActivity extends AppCompatActivity {
                                 // Sign in success, update UI with the signed-in user's information
                                 Log.d(TAG, "signUpWithEmail:success");
                                 FirebaseUser user = mAuth.getCurrentUser();
+
+
                                 UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
                                         .setDisplayName(firstName + " " + lastName)
                                         .build();
+
+
                                 Map<String, Object> mUser = new HashMap<>();
                                 mUser.put("firstName", firstName);
                                 mUser.put("lastName", lastName);
                                 mUser.put("email", email);
+
+
                                 db.collection("users").document(user.getUid())
                                         .set(mUser)
                                         .addOnSuccessListener(aVoid -> Log.d("demo", "DocumentSnapshot successfully written!"))
@@ -109,6 +118,11 @@ public class SignupActivity extends AppCompatActivity {
 
             }
         });
+
+    }
+
+    @Override
+    public void onClick(View v) {
 
     }
 }

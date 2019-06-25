@@ -1,6 +1,7 @@
 package com.linkdump.tchur.ld.adapters;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.text.style.URLSpan;
 import android.view.LayoutInflater;
@@ -69,7 +70,8 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.View
 
 
     private void setAnimation(View viewToAnimate, int position) {
-        if (position > lastPosition) {
+        if (position > lastPosition)
+        {
             Animation animation = AnimationUtils.loadAnimation(context, R.anim.item_animation_fall_down);
             viewToAnimate.startAnimation(animation);
             lastPosition = position;
@@ -121,6 +123,29 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.View
         this.mClickListener = itemClickListener;
     }
 
+    @Override
+    public void onViewAttachedToWindow(@NonNull ViewHolder holder) {
+        super.onViewAttachedToWindow(holder);
+
+    }
+
+    @Override
+    public void onViewDetachedFromWindow(@NonNull ViewHolder holder) {
+        super.onViewDetachedFromWindow(holder);
+
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView);
+
+    }
 
     // parent activity will implement this method to respond to click events
     public interface ItemClickListener {

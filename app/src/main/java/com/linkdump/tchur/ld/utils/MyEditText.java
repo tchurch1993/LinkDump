@@ -17,76 +17,96 @@ import android.view.inputmethod.InputConnection;
  */
 public class MyEditText extends android.support.v7.widget.AppCompatEditText {
 
+
     private String[] imgTypeString;
     private KeyBoardInputCallbackListener keyBoardInputCallbackListener;
+
 
     public MyEditText(Context context) {
         super(context);
         initView();
     }
 
+
     public MyEditText(Context context, AttributeSet attrs) {
         super(context, attrs);
         initView();
     }
 
+
     private void initView() {
-        imgTypeString = new String[]{"image/png",
-                "image/gif",
-                "image/jpeg",
-                "image/webp"};
+        imgTypeString = new String[]{"image/png", "image/gif", "image/jpeg", "image/webp"};
     }
 
+
+
+
     @Override
-    public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+    public InputConnection onCreateInputConnection(EditorInfo outAttrs)
+    {
         final InputConnection ic = super.onCreateInputConnection(outAttrs);
-        EditorInfoCompat.setContentMimeTypes(outAttrs,
-                imgTypeString);
+        EditorInfoCompat.setContentMimeTypes(outAttrs, imgTypeString);
+
         return InputConnectionCompat.createWrapper(ic, outAttrs, callback);
     }
 
 
-    final InputConnectionCompat.OnCommitContentListener callback =
-            new InputConnectionCompat.OnCommitContentListener() {
+
+
+    final InputConnectionCompat.OnCommitContentListener callback = new InputConnectionCompat.OnCommitContentListener() {
                 @Override
-                public boolean onCommitContent(InputContentInfoCompat inputContentInfo,
-                                               int flags, Bundle opts) {
+                public boolean onCommitContent(InputContentInfoCompat inputContentInfo, int flags, Bundle opts) {
+
 
                     // read and display inputContentInfo asynchronously
-                    if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) && (flags &
-                            InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION) != 0) {
+                    if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) && (flags & InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION) != 0)
+                    {
                         try {
                             inputContentInfo.requestPermission();
-                        } catch (Exception e) {
+                        } catch (Exception e)
+                        {
                             return false; // return false if failed
                         }
                     }
+
                     boolean supported = false;
-                    for (final String mimeType : imgTypeString) {
-                        if (inputContentInfo.getDescription().hasMimeType(mimeType)) {
+                    for (final String mimeType : imgTypeString)
+                    {
+                        if (inputContentInfo.getDescription().hasMimeType(mimeType))
+                        {
                             supported = true;
                             break;
                         }
                     }
-                    if (!supported) {
+
+                    if (!supported)
+                    {
                         return false;
                     }
 
-                    if (keyBoardInputCallbackListener != null) {
+                    if (keyBoardInputCallbackListener != null)
+                    {
                         keyBoardInputCallbackListener.onCommitContent(inputContentInfo, flags, opts);
                     }
-                    return true;  // return true if succeeded
+                    return true;
                 }
             };
 
-    public interface KeyBoardInputCallbackListener {
-        void onCommitContent(InputContentInfoCompat inputContentInfo,
-                             int flags, Bundle opts);
+
+
+    public interface KeyBoardInputCallbackListener
+    {
+        void onCommitContent(InputContentInfoCompat inputContentInfo, int flags, Bundle opts);
     }
 
-    public void setKeyBoardInputCallbackListener(KeyBoardInputCallbackListener keyBoardInputCallbackListener) {
+
+
+    public void setKeyBoardInputCallbackListener(KeyBoardInputCallbackListener keyBoardInputCallbackListener)
+    {
         this.keyBoardInputCallbackListener = keyBoardInputCallbackListener;
     }
+
+
 
     public String[] getImgTypeString() {
         return imgTypeString;

@@ -51,10 +51,10 @@ import java.util.Map;
 import java.util.Objects;
 
 public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.ItemClickListener,
-                                                                NewGroupChatAdapter.ItemClickListener,
-                                                                MyEditText.KeyBoardInputCallbackListener,
-                                                                ImageButton.OnClickListener,
-                                                                MyEditText.OnKeyListener {
+                                                               NewGroupChatAdapter.ItemClickListener,
+                                                               MyEditText.KeyBoardInputCallbackListener,
+                                                               ImageButton.OnClickListener,
+                                                               MyEditText.OnKeyListener {
 
 
 
@@ -62,10 +62,6 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
     private SharedPreferences prefs; //Config
     private FirebaseDbContext firebaseDbContext; //Persistence
     private ChatViewCoordinator chatViewCoordinator; //Ui
-
-    //EventHandlers/Logic
-    //TO BE IMPLEMENTED TYLOR, DAMN STOP RUSHING ME
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,7 +100,8 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
-        if (item.getItemId() == android.R.id.home) {
+        if (item.getItemId() == android.R.id.home)
+        {
             finish();
         }
 
@@ -160,14 +157,12 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 }
             }
 
-
-
             Collections.sort(firebaseDbContext.getMessages());
             chatViewCoordinator.adapter.notifyDataSetChanged();
-//            adapter.notifyItemInserted(adapter.getItemCount() - 1);
             chatViewCoordinator.mLayoutManager.scrollToPosition(firebaseDbContext.getMessages().size() - 1);
         });
     }
+
 
 
 
@@ -178,11 +173,15 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
     }
 
 
+
+
     @Override
     protected void onResume() {
         super.onResume();
         prefs.edit().putString("currentGroup", ChatActivityContainer.getTAG()).apply();
     }
+
+
 
     @Override
     protected void onPause() {
@@ -190,17 +189,21 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         prefs.edit().putString("currentGroup", "NONE").apply();
     }
 
+
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         prefs.edit().putString("currentGroup", "NONE").apply();
     }
 
+
+
     public void clearNotifications() {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
         notificationManager.cancel(0);
     }
-    
+
 
     @Override
     public void onCommitContent(InputContentInfoCompat inputContentInfo, int flags, Bundle opts) {
@@ -221,19 +224,24 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         }
     }
 
+
+
     @Override
     public void onClick(View v) {
 
 
-        if (!chatViewCoordinator.chatEditText.getText().toString().equals("")) {
+        if (!Objects.requireNonNull(chatViewCoordinator.chatEditText.getText()).toString().equals("")) {
             Boolean hasLink = false;
             String url = "";
             UrlDetector detector = new UrlDetector(chatViewCoordinator.chatEditText.getText().toString(), UrlDetectorOptions.Default);
+
             List<Url> urls = detector.detect();
             if (!urls.isEmpty()) {
                 hasLink = true;
                 url = urls.get(0).getFullUrl();
             }
+
+
             Map<String, Object> sendMessage = new HashMap<>();
             sendMessage.put("message", chatViewCoordinator.chatEditText.getText() + "");
             sendMessage.put("user", Objects.requireNonNull(firebaseDbContext.getAuth().getUid()));
@@ -250,32 +258,34 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                     .collection(FirebaseConstants.MESSAGES)
                     .add(sendMessage)
                     .addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    Log.d(ChatActivityContainer.getTAG(), "Successfully pushed");
-                    DocumentReference messageRef = task.getResult();
-                    if (finalHasLink) {
-                        Log.d(ChatActivityContainer.getTAG(), "found Link in text");
-                        new JsoupAsyncTask().execute(finalUrl, messageRef.getId());
-                    }
-                }
-            });
+                        if (task.isSuccessful()) {
+                            Log.d(ChatActivityContainer.getTAG(), "Successfully pushed");
+                            DocumentReference messageRef = task.getResult();
+                            if (finalHasLink) {
+                                Log.d(ChatActivityContainer.getTAG(), "found Link in text");
+                                new JsoupAsyncTask().execute(finalUrl, messageRef.getId());
+                            }
+                        }
+                    });
             chatViewCoordinator.chatEditText.getText().clear();
         }
     }
+
+
 
     @Override
     public boolean onKey(View v, int keyCode, KeyEvent event)
     {
         if (event.getAction() == KeyEvent.ACTION_DOWN) {
-            switch (keyCode) {
-                case KeyEvent.KEYCODE_DPAD_CENTER:
-                case KeyEvent.KEYCODE_ENTER:
-                    chatViewCoordinator.imageButton.callOnClick();
-                    return true;
-                default:
-                    break;
-            }
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_DPAD_CENTER:
+            case KeyEvent.KEYCODE_ENTER:
+                chatViewCoordinator.imageButton.callOnClick();
+                return true;
+            default:
+                break;
         }
+    }
         return false;
     }
 
@@ -283,6 +293,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
 
     // This entire class is to grab the meta data of a website and grab the image, title, and description
     //TODO: Offload this to an API since I do not want the user to practically have a web page downloaded and parsed in the background if I dont need it to
+
         public class JsoupAsyncTask extends AsyncTask<String, Void, Map<String, String>> {
 
         private final String TAG = JsoupAsyncTask.class.getSimpleName();
@@ -326,15 +337,19 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                 {
                     hasSchemaThing = true;
                 }
+
+
                 //this seperated the head element from the response string
                 Element headElement = doc.head();
                 Elements metaElements = headElement.getElementsByAttribute("property");
                 Log.d(TAG, "all meta elements: " + metaElements.toString());
                 Map<String, String> ogTags = new HashMap<>();
+
+
                 // grabs the meta data that matches the REGEX expression
-                for (Element e : metaElements) {
-                    if (e.attributes().get("property").matches(ChatActivityContainer.getOgRegex()) ||
-                            e.attributes().get("Property").matches(ChatActivityContainer.getOgRegex())) {
+                for (Element e : metaElements)
+                {
+                    if (e.attributes().get("property").matches(ChatActivityContainer.getOgRegex()) || e.attributes().get("Property").matches(ChatActivityContainer.getOgRegex())) {
                         ogTags.put(e.attr("property"), e.attr("content"));
                         Log.d(TAG, e.attr("content"));
                     }
@@ -401,7 +416,8 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                             }
                         }
 
-                        DocumentReference messageRef = firebaseDbContext.groupRef
+                        DocumentReference messageRef = firebaseDbContext
+                                .groupRef
                                 .collection(FirebaseConstants.MESSAGES)
                                 .document(messageId);
 

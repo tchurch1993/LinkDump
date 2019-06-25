@@ -26,13 +26,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-<<<<<<< HEAD
+
 
 public class CreateGroupActivity extends AppCompatActivity implements Button.OnClickListener {
-=======
+
 /* Much of this class could be put into an API of sorts to limit the amount of network calls and logic on the users device */
-public class CreateGroupActivity extends AppCompatActivity {
->>>>>>> clean-reformat
+
+
 
     private FirebaseDbContext firebaseDbContext;
 
@@ -57,6 +57,7 @@ public class CreateGroupActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         firebaseDbContext = new FirebaseDbContext(getApplicationContext());
+
         setTheme(R.style.LinkDumpDark);
         setContentView(R.layout.activity_create_group);
 
@@ -91,17 +92,30 @@ public class CreateGroupActivity extends AppCompatActivity {
 
 
     public void addGroupToDB(final List<String> memberIDs) {
+
+
+
         memberIDs.add(firebaseDbContext.getAuth().getUid());
+
         data.put("members", memberIDs);
+
         Random rand = new Random();
         int reqCode = rand.nextInt();
         data.put("groupReqCode", reqCode);
 
+
+
         firebaseDbContext
                 .getDb()
                 .collection(FirebaseConstants.GROUPS)
-                .add(data).addOnCompleteListener(task ->firebaseDbContext.getDb()
-                .runTransaction((Transaction.Function<Void>) transaction -> {
+                .add(data).addOnCompleteListener(task ->
+
+
+
+
+                firebaseDbContext.getDb()
+                .runTransaction((Transaction.Function<Void>) transaction ->
+                {
             if (task.isSuccessful()) {
 
                 ArrayList<DocumentSnapshot> memberSnapshots = new ArrayList<>();
@@ -142,7 +156,9 @@ public class CreateGroupActivity extends AppCompatActivity {
 
 
     public void checkMemberInDB(final List<String> memberEmail) {
-        firebaseDbContext.getDb().collection("users").get().addOnCompleteListener(task -> {
+        firebaseDbContext.getDb()
+                .collection("users")
+                .get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 for (DocumentSnapshot document : task.getResult()) {
                     String email = document.getString("email");
@@ -160,6 +176,9 @@ public class CreateGroupActivity extends AppCompatActivity {
 
     public void subscribeAllMembers(List<String> memberIds)
     {
+
+
+
 
     }
 
