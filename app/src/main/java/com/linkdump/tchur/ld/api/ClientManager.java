@@ -13,7 +13,7 @@ import java.util.function.Predicate;
 public class ClientManager extends Manager {
 
 
-    private ClientManager(FirebaseDbContext firebaseDbContext) {
+    public ClientManager(FirebaseDbContext firebaseDbContext) {
         super(firebaseDbContext);
 
     }
@@ -36,9 +36,6 @@ public class ClientManager extends Manager {
 
         return new User();
     }
-
-
-
 
 
     public List<User> GetUsers(int limit, Predicate<String> filter) {
@@ -76,7 +73,7 @@ public class ClientManager extends Manager {
         // /posts/$postid simultaneously
         String key = firebaseDbContext
                 .getDbReference()
-                .child("posts")
+                .child(FirebaseConstants.POSTS)
                 .push()
                 .getKey();
 

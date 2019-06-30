@@ -36,20 +36,23 @@ public class DomParsing {
 
 
 
-    public Document getWebsiteDocument(String url) {
+    public Document getWebsiteDocument(String url, String guessedUrl) {
 
         Document document;
         try {
 
             document = Jsoup.connect(url).get();
-
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
             url = url.replace("http", "https");
             Log.d(TAG, "second URL after http replaced with https is: " + guessedUrl);
-            try {
+            try
+            {
                 document = Jsoup.connect(url).get();
-            } catch (IOException error) {
+            }
+            catch (IOException error)
+            {
                 error.printStackTrace();
             }
             ex.printStackTrace();

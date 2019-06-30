@@ -190,9 +190,9 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
                     }
 
                     // Add code here to update the UI based on the item selected
-                    // For example, swap UI fragments here
 
-                    //ewww, fragments
+
+
 
                     return true;
                 });

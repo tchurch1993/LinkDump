@@ -32,6 +32,7 @@ import com.linkdump.tchur.ld.api.GroupManager;
 import com.linkdump.tchur.ld.api.listeners.TrialListener;
 import com.linkdump.tchur.ld.api.MessageManager;
 import com.linkdump.tchur.ld.authorization.GoogleAuthManager;
+import com.linkdump.tchur.ld.constants.FirebaseConstants;
 import com.linkdump.tchur.ld.persistence.FirebaseDbContext;
 import com.linkdump.tchur.ld.ui.LoginViewCoordinator;
 
@@ -39,7 +40,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class LoginActivity extends AppCompatActivity implements Button.OnClickListener, OnGoogleSignInSuccess, OnGoogleSignInFailure {
+public class LoginActivity extends AppCompatActivity implements Button.OnClickListener,
+                                                                        OnGoogleSignInSuccess,
+                                                                        OnGoogleSignInFailure {
 
 
     private FirebaseDbContext firebaseDbContext;
@@ -48,7 +51,7 @@ public class LoginActivity extends AppCompatActivity implements Button.OnClickLi
     private GoogleAuthManager googleAuthManager;
 
 
-    private UserManager userManager;
+    private ClientManager userManager;
     private MessageManager messageManager;
     private GroupManager groupManager;
 
@@ -92,16 +95,10 @@ public class LoginActivity extends AppCompatActivity implements Button.OnClickLi
 
 
 
-        ClientManager.Create(firebaseDbContext)
-                     .OnSuccess(new TrialListener().getResult())
-                     .OnFailure( t -> {    })
-                     .OnCanceled(() -> {    });
-
-
-
-
-
-    }
+        userManager = new ClientManager(firebaseDbContext);
+        groupManager = new GroupManager(firebaseDbContext);
+        messageManager = new MessageManager(firebaseDbContext);
+  }
 
 
 
@@ -148,13 +145,33 @@ public class LoginActivity extends AppCompatActivity implements Button.OnClickLi
 
 
 
+   public Map<String, Object> MapAccountToUser(GoogleSignInAccount acct){
 
+
+       Map<String, Object> mUser = new HashMap<>();
+       if (acct.getGivenName() != null){
+           mUser.put("firstName", acct.getGivenName());
+       }
+       if (acct.getFamilyName() != null){
+           mUser.put("lastName", acct.getFamilyName());
+       }
+       if (acct.getEmail() != null){
+           mUser.put("email", acct.getEmail());
+       }
+       if (acct.getPhotoUrl() != null){
+           mUser.put("photoUrl", acct.getPhotoUrl());
+       }
+
+       return mUser;
+
+   }
 
 
 
 
     // TODO: Get Google auth working
-    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
+    private void firebaseAuthWithGoogle(GoogleSignInAccount acct)
+    {
 
         Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
 
@@ -173,43 +190,29 @@ public class LoginActivity extends AppCompatActivity implements Button.OnClickLi
                                 .setDisplayName(acct.getDisplayName())
                                 .build();
 
-                        /*
 
-                           -Add Firebase ORM Mapper here
-                           -
+                        Map<String, Object> mUser = MapAccountToUser(acct);
 
 
-                         */
 
 
-                        Map<String, Object> mUser = new HashMap<>();
-                        if (acct.getGivenName() != null){
-                            mUser.put("firstName", acct.getGivenName());
-                        }
-                        if (acct.getFamilyName() != null){
-                            mUser.put("lastName", acct.getFamilyName());
-                        }
-                        if (acct.getEmail() != null){
-                            mUser.put("email", acct.getEmail());
-                        }
-                        if (acct.getPhotoUrl() != null){
-                            mUser.put("photoUrl", acct.getPhotoUrl());
-                        }
-
-
-                        firebaseDbContext.getDb().collection("users").document(Objects.requireNonNull(user).getUid())
-                                .set(mUser)
+                        firebaseDbContext.getDb()
+                                .collection(FirebaseConstants.USERS)
+                                .document(Objects.requireNonNull(user).getUid())
+                                .set(user)
                                 .addOnSuccessListener(aVoid -> Log.d("demo", "DocumentSnapshot successfully written!"))
                                 .addOnFailureListener(e -> Log.w("demo", "Error writing document", e));
 
 
-                        user.updateProfile(profileUpdates).addOnCompleteListener(task1 -> {
+                         user.updateProfile(profileUpdates).addOnCompleteListener(task1 -> {
+
                                     if (task1.isSuccessful()) {
                                         Log.d(TAG, "User profile updated");
                                         Intent i = new Intent(LoginActivity.this, MainActivity.class);
                                         startActivity(i);
                                         finish();
                                     }
+
                                 });
 
                     }

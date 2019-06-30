@@ -18,29 +18,26 @@ import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.Transaction;
 import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.adapters.GroupNameAdapter;
+import com.linkdump.tchur.ld.api.GroupManager;
 import com.linkdump.tchur.ld.constants.FirebaseConstants;
+import com.linkdump.tchur.ld.objects.Group;
+import com.linkdump.tchur.ld.objects.User;
 import com.linkdump.tchur.ld.persistence.FirebaseDbContext;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 
 
 public class CreateGroupActivity extends AppCompatActivity implements Button.OnClickListener {
 
-/* Much of this class could be put into an API of sorts to limit the amount of network calls and logic on the users device */
-
-
+    /* Much of this class could be put into an API of sorts to limit the amount of network calls and logic on the users device */
 
     private FirebaseDbContext firebaseDbContext;
-
-
-    private List<String> members;
-    private List<String> memberEmails;
-
-    private CollectionReference usersRef;
+    private GroupManager groupManager;
     private Map<String, Object> data;
 
     Button button;
@@ -57,16 +54,11 @@ public class CreateGroupActivity extends AppCompatActivity implements Button.OnC
         super.onCreate(savedInstanceState);
 
         firebaseDbContext = new FirebaseDbContext(getApplicationContext());
+        groupManager = new GroupManager(firebaseDbContext);
 
         setTheme(R.style.LinkDumpDark);
         setContentView(R.layout.activity_create_group);
 
-
-        usersRef = firebaseDbContext.getDb().collection(FirebaseConstants.USERS);
-
-
-        memberEmails = new ArrayList<>();
-        members = new ArrayList<>();
         data = new HashMap<>();
 
 
@@ -82,18 +74,7 @@ public class CreateGroupActivity extends AppCompatActivity implements Button.OnC
     }
 
 
-
-
-
-
-
-
-
-
-
     public void addGroupToDB(final List<String> memberIDs) {
-
-
 
         memberIDs.add(firebaseDbContext.getAuth().getUid());
 
@@ -104,122 +85,128 @@ public class CreateGroupActivity extends AppCompatActivity implements Button.OnC
         data.put("groupReqCode", reqCode);
 
 
-
         firebaseDbContext
                 .getDb()
                 .collection(FirebaseConstants.GROUPS)
-                .add(data).addOnCompleteListener(task ->
+                .add(data)
+                .addOnCompleteListener(task ->
 
-
-
-
-                firebaseDbContext.getDb()
-                .runTransaction((Transaction.Function<Void>) transaction ->
-                {
-            if (task.isSuccessful()) {
-
-                ArrayList<DocumentSnapshot> memberSnapshots = new ArrayList<>();
-                for (String memberID : memberIDs) {
-                    memberSnapshots.add(transaction.get(usersRef.document(memberID)));
-                }
-                for (int i = 0; i < memberIDs.size(); i++) {
-                    List<String> memberGroups;
-                    if (memberSnapshots.get(i).contains("groups"))
-                    {
-                        memberGroups = (List<String>) memberSnapshots.get(i).get("groups");
-                        memberGroups.add(task.getResult().getId());
-                        transaction.update(usersRef.document(memberIDs.get(i)), "groups", memberGroups);
-                    }
-                    else
+                        firebaseDbContext.getDb()
+                                         .runTransaction((Transaction.Function<Void>) transaction ->
                         {
-                        memberGroups = new ArrayList<>();
-                        memberGroups.add(task.getResult().getId());
-                        Log.d("demo", memberIDs.get(i));
-                        Map<String, Object> memberData;
-                        memberData = memberSnapshots.get(i).getData();
-                        memberData.put("groups", memberGroups);
-                        transaction.set(usersRef.document(memberIDs.get(i)), memberData, SetOptions.merge());
-                    }
-                }
-            }
+                            if (task.isSuccessful()) {
 
-            return null;
-        }).addOnFailureListener(e -> {
-            Toast.makeText(CreateGroupActivity.this, "Failed to add group", Toast.LENGTH_SHORT).show();
-            Log.w("demo", "Transaction Failure.", e);
-        }));
+                                ArrayList<DocumentSnapshot> memberSnapshots = new ArrayList<>();
+                                for (String memberID : memberIDs) {
+                                    memberSnapshots.add(transaction.get(firebaseDbContext
+                                                                   .getUserRef()
+                                                                   .document(memberID)));
+                                }
+                                for (int i = 0; i < memberIDs.size(); i++) {
+                                    List<String> memberGroups;
+                                    if (memberSnapshots.get(i).contains("groups")) {
+                                        memberGroups = (List<String>) memberSnapshots.get(i).get("groups");
+                                        memberGroups.add(task.getResult().getId());
+
+                                        transaction.update(firebaseDbContext
+                                                   .getUserRef()
+                                                   .document(memberIDs.get(i)), "groups", memberGroups);
+                                    } else
+                                        {
+                                        memberGroups = new ArrayList<>();
+                                        memberGroups.add(task.getResult().getId());
+                                        Log.d("demo", memberIDs.get(i));
+                                        Map<String, Object> memberData;
+                                        memberData = memberSnapshots.get(i).getData();
+                                        memberData.put("groups", memberGroups);
+
+                                        transaction.set(firebaseDbContext
+                                                   .getUserRef()
+                                                   .document(memberIDs.get(i)), memberData, SetOptions.merge());
+                                    }
+                                }
+                            }
+
+
+                        }).addOnFailureListener(e -> {
+                            Toast.makeText(CreateGroupActivity.this, "Failed to add group", Toast.LENGTH_SHORT).show();
+                            Log.w("demo", "Transaction Failure.", e);
+                        }));
     }
-
-
-
-
 
 
     public void checkMemberInDB(final List<String> memberEmail) {
+
+
         firebaseDbContext.getDb()
-                .collection("users")
-                .get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                for (DocumentSnapshot document : task.getResult()) {
-                    String email = document.getString("email");
-                    for (String mEmail : memberEmail) {
-                        if (email.equals(mEmail)) {
-                            String userID = document.getId();
-                            addMemberToList(userID);
+                .collection(FirebaseConstants.USERS)
+                .get()
+                .addOnCompleteListener(task -> {
+
+                    if (task.isSuccessful()) {
+                        for (DocumentSnapshot document : Objects.requireNonNull(task.getResult())) {
+                            String email = document.getString("email");
+                            for (String mEmail : memberEmail) {
+                                if (email.equals(mEmail)) {
+                                    String userID = document.getId();
+                                    addMemberToList(userID);
+                                }
+                            }
                         }
+
+                        // GroupManager.Create(firebaseDbContext)
+                        //   .CreateGroup(members)
+                        // .OnSuccess(t -> { updateUi(t)})
+                        //  .OnFailure(t-> {updateui(ex});
+
+                        addGroupToDB(firebaseDbContext.getMembers());
                     }
-                }
-                addGroupToDB(members);
-            }
-        });
+                });
     }
 
-    public void subscribeAllMembers(List<String> memberIds)
-    {
-
-
+    public void subscribeAllMembers(List<String> memberIds) {
 
 
     }
+
 
     public void addMemberToList(String userID) {
-        members.add(userID);
+        firebaseDbContext.getMembers().add(userID);
     }
+
 
     @Override
     public void onClick(View v) {
-            if (!groupName.getText().toString().isEmpty()) {
-                data.put("groupName", groupName.getText() + "");
-                data.put("owner", firebaseDbContext.getAuth().getUid());
-                if (!member1.getText().toString().isEmpty()) {
-                    memberEmails.add(member1.getText() + "");
-                }
-                if (!member2.getText().toString().isEmpty()) {
-                    memberEmails.add(member2.getText() + "");
-                }
-                if (!member3.getText().toString().isEmpty()) {
-                    memberEmails.add(member3.getText() + "");
-                }
-                if (!member4.getText().toString().isEmpty()) {
-                    memberEmails.add(member4.getText() + "");
-                }
-                if (!member5.getText().toString().isEmpty()) {
-                    memberEmails.add(member5.getText() + "");
-                }
-                if (memberEmails.size() > 0) {
-                    checkMemberInDB(memberEmails);
-                    finish();
-                } else {
-                    Toast.makeText(CreateGroupActivity.this,
-                            "Please Input a Group Member",
-                            Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(CreateGroupActivity.this,
-                        "Please Input a Group Name",
-                        Toast.LENGTH_SHORT).show();
-            }
 
+
+        if (!groupName.getText().toString().isEmpty()) {
+            data.put("groupName", groupName.getText() + "");
+            data.put("owner", firebaseDbContext.getAuth().getUid());
+            if (!member1.getText().toString().isEmpty()) {
+                firebaseDbContext.getMembers().add(member1.getText() + "");
+            }
+            if (!member2.getText().toString().isEmpty()) {
+                firebaseDbContext.getMembers().add(member2.getText() + "");
+            }
+            if (!member3.getText().toString().isEmpty()) {
+                firebaseDbContext.getMembers().add(member3.getText() + "");
+            }
+            if (!member4.getText().toString().isEmpty()) {
+                firebaseDbContext.getMembers().add(member4.getText() + "");
+            }
+            if (!member5.getText().toString().isEmpty()) {
+                firebaseDbContext.getMembers().add(member5.getText() + "");
+            }
+            if (firebaseDbContext.getMemberEmails().size() > 0) {
+                checkMemberInDB(firebaseDbContext.getMemberEmails());
+                GroupManager.Create(firebaseDbContext).checkMemberInDB(firebaseDbContext.getMemberEmails());
+                finish();
+            } else {
+                Toast.makeText(CreateGroupActivity.this, "Please Input a Group Member", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Toast.makeText(CreateGroupActivity.this, "Please Input a Group Name", Toast.LENGTH_SHORT).show();
+        }
 
 
     }

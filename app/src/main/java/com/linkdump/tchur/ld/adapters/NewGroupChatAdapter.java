@@ -33,6 +33,7 @@ import java.util.List;
 
 //TODO: Need to rename this to just GroupChatAdapter and have it replace the older one since we are already using this one instead
 public class NewGroupChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
     private static final String TAG = NewGroupChatAdapter.class.getSimpleName();
 
     private List<Message> mData;
@@ -51,6 +52,7 @@ public class NewGroupChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     // inflates the row layout from xml when needed
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+
         switch (viewType) {
             case 0:
                 View view = mInflater.inflate(R.layout.my_message, parent, false);

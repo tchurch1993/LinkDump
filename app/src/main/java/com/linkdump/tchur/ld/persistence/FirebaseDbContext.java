@@ -9,6 +9,7 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.linkdump.tchur.ld.abstractions.IFirebaseDbContext;
+import com.linkdump.tchur.ld.constants.FirebaseConstants;
 import com.linkdump.tchur.ld.objects.Message;
 
 import java.util.ArrayList;
@@ -24,11 +25,16 @@ public class FirebaseDbContext implements IFirebaseDbContext {
     private FirebaseAuth mAuth;
     private DatabaseReference dbReference;
 
+
     public DocumentReference userRef;
     public DocumentReference groupRef;
     public CollectionReference usersRef;
 
+
     private ArrayList<String> events;
+
+    private List<String> members;
+    private List<String> memberEmails;
     private List<Message> messages;
     private List<String> userGroups;
 
@@ -39,6 +45,10 @@ public class FirebaseDbContext implements IFirebaseDbContext {
         this.db = FirebaseFirestore.getInstance();
         this.mAuth = FirebaseAuth.getInstance();
         this.dbReference = FirebaseDatabase.getInstance().getReference();
+
+
+        this.usersRef = db.collection(FirebaseConstants.USERS);
+
 
         this.events = new ArrayList<>();
         this.userGroups = new ArrayList<>();
@@ -75,6 +85,21 @@ public class FirebaseDbContext implements IFirebaseDbContext {
         db.collection(moniker).document(Objects.requireNonNull(mAuth.getUid()));
     }
 
+    public List<String> getMembers() {
+        return members;
+    }
+
+    public void setMembers(List<String> members) {
+        this.members = members;
+    }
+
+    public List<String> getMemberEmails() {
+        return memberEmails;
+    }
+
+    public void setMemberEmails(List<String> memberEmails) {
+        this.memberEmails = memberEmails;
+    }
     //groupRef = db.collection("groups").document(currentGroup);
     public FirebaseDbContext PopulateFromMoniker(List list, String moniker) {
         db.collection(moniker).document(Objects.requireNonNull(mAuth.getUid()));
@@ -105,4 +130,11 @@ public class FirebaseDbContext implements IFirebaseDbContext {
         this.dbReference = dbReference;
     }
 
+    public DocumentReference getUserRef() {
+        return userRef;
+    }
+
+    public void setUserRef(DocumentReference userRef) {
+        this.userRef = userRef;
+    }
 }

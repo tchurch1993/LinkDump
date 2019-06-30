@@ -50,9 +50,7 @@ public class ChatViewCoordinator extends ViewCoordinator {
         adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onItemRangeInserted(int positionStart, int itemCount) {
-                mLayoutManager.smoothScrollToPosition(mRecyclerView,
-                        null,
-                        adapter.getItemCount());
+                mLayoutManager.smoothScrollToPosition(mRecyclerView, null,adapter.getItemCount());
             }
         });
 

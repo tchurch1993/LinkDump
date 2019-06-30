@@ -9,6 +9,7 @@ import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.linkdump.tchur.ld.api.parent.Manager;
 import com.linkdump.tchur.ld.constants.FirebaseConstants;
 import com.linkdump.tchur.ld.objects.Message;
 import com.linkdump.tchur.ld.objects.User;
@@ -21,15 +22,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-public class MessageManager {
+public class MessageManager extends Manager {
 
 
-    private FirebaseDbContext db;
+    public MessageManager(FirebaseDbContext firebaseDbContext) {
+        super(firebaseDbContext);
 
-    private OnSuccessListener successListener;
-    private OnFailureListener failureListener;
-    public MessageManager(FirebaseDbContext db) {
-        this.db = db;
     }
 
 
@@ -43,7 +41,7 @@ public class MessageManager {
 
         final List<Message> messages;
 
-        db.getDb().collection(FirebaseConstants.GROUPS)
+        firebaseDbContext.getDb().collection(FirebaseConstants.GROUPS)
                 .document(currentGroup)
                 .collection(FirebaseConstants.MESSAGES)
                 .orderBy("sentTime", Query.Direction.DESCENDING)
@@ -64,7 +62,7 @@ public class MessageManager {
 
 
                         //Map Messages to info here
-                        if (!tempMessage.getUser().equals(db.getAuth().getUid())) {
+                        if (!tempMessage.getUser().equals(firebaseDbContext.getAuth().getUid())) {
                             tempMessage.setIsUser(false);
                         } else {
                             tempMessage.setIsUser(true);
@@ -72,25 +70,29 @@ public class MessageManager {
 
                         boolean exists = false;
 
-                        for (int i = 0; i < db.getMessages().size(); i++) {
-                            if (db.getMessages().get(i).getSentTime() == tempMessage.getSentTime()) {
-                                db.getMessages().set(i, tempMessage);
+                        for (int i = 0; i < firebaseDbContext.getMessages().size(); i++) {
+                            if (firebaseDbContext.getMessages().get(i).getSentTime() == tempMessage.getSentTime()) {
+                                firebaseDbContext.getMessages().set(i, tempMessage);
                                 exists = true;
                             }
                         }
 
                         if (!exists) {
-                            db.getMessages().add(tempMessage);
-                            db.getEvents().add(mDoc.getString("message"));
+                            firebaseDbContext.getMessages().add(tempMessage);
+                            firebaseDbContext.getEvents().add(mDoc.getString("message"));
                         }
                     }
 
-                    Collections.sort(db.getMessages());
-                 });
+                    Collections.sort(firebaseDbContext.getMessages());
+                });
 
 
-        return db.getMessages();
+        return firebaseDbContext.getMessages();
     }
+
+
+
+
 
 
     public Message CreateMessage(Message message) {
@@ -100,8 +102,11 @@ public class MessageManager {
         // mUser.put("lastName", user.lastName);
         // mUser.put("email", user.email);
 
-      return null;
+        return null;
     }
+
+
+
 
 
     public Message UpdateMessage(Message message) {
@@ -110,11 +115,17 @@ public class MessageManager {
         return null;
     }
 
+
+
+
     public boolean DeleteMessage(Message message) {
 
 
         return false;
     }
+
+
+
 
 
     public boolean DeleteMessage(int id) {

@@ -32,11 +32,13 @@ public class GroupManager extends Manager {
 
     }
 
+    public static GroupManager Create(FirebaseDbContext db){
+         return new GroupManager(db);
+    }
+
 
     public Group GetGroup(String ref) {
-
-
-        return new Group();
+           return new Group();
     }
 
     public Group GetGroupById(int id) {
@@ -44,6 +46,9 @@ public class GroupManager extends Manager {
 
         return null;
     }
+
+
+
 
     public List<Group> GetGroups(int limit, Predicate<String> filter) {
         List<Group> groups;
@@ -53,7 +58,48 @@ public class GroupManager extends Manager {
     }
 
 
-    public void CreateGroup(final List<String> memberIDs) {
+
+    public void addMemberToList(String userID) {
+        firebaseDbContext.getMembers().add(userID);
+    }
+
+
+
+
+
+    public void checkMemberInDB(final List<String> memberEmail) {
+        firebaseDbContext.getDb()
+                .collection(FirebaseConstants.USERS)
+                .get()
+                .addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+
+
+                for (DocumentSnapshot document : task.getResult()) {
+                    String email = document.getString("email");
+                    for (String mEmail : memberEmail)
+                    {
+                        if (email.equals(mEmail))
+                        {
+                            String userID = document.getId();
+                            addMemberToList(userID);
+                        }
+                    }
+                }
+                CreateGroup(firebaseDbContext.getMembers());
+            }
+        });
+    }
+
+
+    /*
+
+         -Same thing as add group to db
+         -Renamed Create to fit the CRUD operations guidelines
+         -Needs to fit the
+
+    */
+    public GroupManager CreateGroup(final List<String> memberIDs) {
 
         Map<String, Object> data = new HashMap<>();
         memberIDs.add(firebaseDbContext.getAuth().getUid());
@@ -65,11 +111,15 @@ public class GroupManager extends Manager {
         data.put("groupReqCode", reqCode);
 
 
-        firebaseDbContext.getDb().collection(FirebaseConstants.GROUPS)
-                .add(data).addOnCompleteListener(task ->
+        firebaseDbContext
+                .getDb()
+                .collection(FirebaseConstants.GROUPS)
+                .add(data)
+                .addOnCompleteListener(task ->
 
 
-                firebaseDbContext.getDb()
+                firebaseDbContext
+                        .getDb()
                         .runTransaction((Transaction.Function<Void>) transaction ->
                         {
                             if (task.isSuccessful()) {
@@ -105,29 +155,19 @@ public class GroupManager extends Manager {
 
                             return null;
                         })
-                        .addOnFailureListener(e -> {
-
-                        }));
+                        .addOnFailureListener(failureListener));
+        return this;
     }
 
 
-    public Group CreateGroup(Group groups) {
 
-
-        // Map<String, Object> mUser = new HashMap<>();
-        //mUser.put("firstName", user.firstName);
-        // mUser.put("lastName", user.lastName);
-        //  mUser.put("email", user.email);
-
-
-        return null;
-    }
 
 
     public Group UpdateGroup(Group user) {
 
         return null;
     }
+
 
     public boolean DeleteGroup(Group group) {
 

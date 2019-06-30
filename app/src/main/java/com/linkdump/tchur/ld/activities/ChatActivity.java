@@ -23,6 +23,9 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.SetOptions;
 import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.abstractions.IActivityContainer;
+import com.linkdump.tchur.ld.abstractions.listeners.OnDocumentChangedCompletedListener;
+import com.linkdump.tchur.ld.abstractions.listeners.OnDocumentChangedListener;
+import com.linkdump.tchur.ld.api.listeners.FirebaseListener;
 import com.linkdump.tchur.ld.constants.FirebaseConstants;
 import com.linkdump.tchur.ld.data.ChatActivityContainer;
 import com.linkdump.tchur.ld.ui.ChatViewCoordinator;
@@ -54,14 +57,20 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                                                                NewGroupChatAdapter.ItemClickListener,
                                                                MyEditText.KeyBoardInputCallbackListener,
                                                                ImageButton.OnClickListener,
-                                                               MyEditText.OnKeyListener {
+                                                               MyEditText.OnKeyListener,
+                                                               OnDocumentChangedCompletedListener,
+                                                               OnDocumentChangedListener {
 
 
 
     private ChatActivityContainer chatActivityContainer; //Data
-    private SharedPreferences prefs; //Config
     private FirebaseDbContext firebaseDbContext; //Persistence
     private ChatViewCoordinator chatViewCoordinator; //Ui
+    private SharedPreferences prefs; //Config
+
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,53 +123,11 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
 
     public void groupChatListener(String currentGroup) {
 
-        firebaseDbContext.getDb()
-                .collection(FirebaseConstants.GROUPS)
-                .document(currentGroup)
-                .collection(FirebaseConstants.MESSAGES)
-                .orderBy("sentTime", Query.Direction.DESCENDING)
-                .limit(25)
-                .addSnapshotListener((queryDocumentSnapshots, e) ->
-                {
-            if (e != null)
-            {
-                Log.w("demo", "Listener Failed", e);
-                return;
-            }
+        FirebaseListener listener = new FirebaseListener(firebaseDbContext);
 
-            for (DocumentChange doc : Objects.requireNonNull(queryDocumentSnapshots)
-                    .getDocumentChanges()) {
-
-                QueryDocumentSnapshot mDoc = doc.getDocument();
-                Log.d("demo", mDoc.get("message") + "");
-                Message tempMessage = mDoc.toObject(Message.class);
-
-                if (!tempMessage.getUser().equals(firebaseDbContext.getAuth().getUid())) {
-                    tempMessage.setIsUser(false);
-                } else {
-                    tempMessage.setIsUser(true);
-                }
-
-                boolean exists = false;
-
-                for (int i = 0; i < firebaseDbContext.getMessages().size(); i++)
-                {
-                    if (firebaseDbContext.getMessages().get(i).getSentTime() == tempMessage.getSentTime()) {
-                        firebaseDbContext.getMessages().set(i, tempMessage);
-                        exists = true;
-                    }
-                }
-
-                if (!exists) {
-                    firebaseDbContext.getMessages().add(tempMessage);
-                    firebaseDbContext.getEvents().add(mDoc.getString("message"));
-                }
-            }
-
-            Collections.sort(firebaseDbContext.getMessages());
-            chatViewCoordinator.adapter.notifyDataSetChanged();
-            chatViewCoordinator.mLayoutManager.scrollToPosition(firebaseDbContext.getMessages().size() - 1);
-        });
+        listener.SetListener(currentGroup)
+                .setOnDocumentChangeCompletedListener(this)
+                .setOnDocumentChangedListner(this);
     }
 
 
@@ -236,7 +203,8 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
             UrlDetector detector = new UrlDetector(chatViewCoordinator.chatEditText.getText().toString(), UrlDetectorOptions.Default);
 
             List<Url> urls = detector.detect();
-            if (!urls.isEmpty()) {
+            if (!urls.isEmpty())
+            {
                 hasLink = true;
                 url = urls.get(0).getFullUrl();
             }
@@ -258,14 +226,17 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
                     .collection(FirebaseConstants.MESSAGES)
                     .add(sendMessage)
                     .addOnCompleteListener(task -> {
+
                         if (task.isSuccessful()) {
                             Log.d(ChatActivityContainer.getTAG(), "Successfully pushed");
                             DocumentReference messageRef = task.getResult();
-                            if (finalHasLink) {
+                            if (finalHasLink)
+                            {
                                 Log.d(ChatActivityContainer.getTAG(), "found Link in text");
                                 new JsoupAsyncTask().execute(finalUrl, messageRef.getId());
                             }
                         }
+
                     });
             chatViewCoordinator.chatEditText.getText().clear();
         }
@@ -289,6 +260,28 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         return false;
     }
 
+
+
+
+
+    @Override
+    public void OnDocumentCompleted() {
+
+
+
+    }
+
+
+
+
+    @Override
+    public void OnDocumentChanged(DocumentChange change) {
+
+
+
+
+
+    }
 
 
     // This entire class is to grab the meta data of a website and grab the image, title, and description
