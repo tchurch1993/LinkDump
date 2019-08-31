@@ -30,25 +30,51 @@ import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.linkdump.tchur.ld.R;
+import com.linkdump.tchur.ld.repository.FirebaseDbContext;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
-    private FirebaseAuth mAuth;
-    private FirebaseFirestore db;
-    private final String TAG = "Log";
-    private GoogleSignInClient mGoogleSignInClient;
 
+
+
+    //ui
     EditText editTextUsername, editTextPassword;
     ProgressBar progressBar;
+
+
+
+    //business logic
+
+
+
+
+    //context
+    private GoogleSignInClient mGoogleSignInClient;
+
+    private FirebaseDbContext firebaseDbContext;
+    //app event adapter
+
+
+
+
+    //data
+    private final String TAG = "Log";
+
+
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        mAuth = FirebaseAuth.getInstance();
-        db = FirebaseFirestore.getInstance();
+
+       firebaseDbContext = new FirebaseDbContext();
+       // mAuth = FirebaseAuth.getInstance();
+        //db = FirebaseFirestore.getInstance();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // Create channel to show notifications.
@@ -90,12 +116,12 @@ public class LoginActivity extends AppCompatActivity {
                 Toast.makeText(LoginActivity.this, "Enter Password", Toast.LENGTH_SHORT).show();
             } else {
                 progressBar.setVisibility(View.VISIBLE);
-                mAuth.signInWithEmailAndPassword(email, password)
+                firebaseDbContext.getFirebaseAuth().signInWithEmailAndPassword(email, password)
                         .addOnCompleteListener(LoginActivity.this, task -> {
                             if (task.isSuccessful()) {
                                 // Sign in success, update UI with the signed-in user's information
                                 Log.d(TAG, "signInWithEmail:success");
-                                FirebaseUser user = mAuth.getCurrentUser();
+                                FirebaseUser user = firebaseDbContext.getFirebaseAuth().getCurrentUser();
                                 progressBar.setVisibility(View.INVISIBLE);
 
 
@@ -118,12 +144,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        findViewById(R.id.googleSignInButton).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                signIn();
-            }
-        });
+        findViewById(R.id.googleSignInButton).setOnClickListener(v -> signIn());
 
 
     }
@@ -155,63 +176,61 @@ public class LoginActivity extends AppCompatActivity {
         // [END_EXCLUDE]
 
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
-        mAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            Log.d(TAG, "signInWithCredential:success");
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                                    .setDisplayName(acct.getDisplayName())
-                                    .build();
-                            Map<String, Object> mUser = new HashMap<>();
-                            if (acct.getGivenName() != null){
-                                mUser.put("firstName", acct.getGivenName());
-                            }
-                            if (acct.getFamilyName() != null){
-                                mUser.put("lastName", acct.getFamilyName());
-                            }
-                            if (acct.getEmail() != null){
-                                mUser.put("email", acct.getEmail());
-                            }
-                            if (acct.getPhotoUrl() != null){
-                                mUser.put("photoUrl", acct.getPhotoUrl());
-                            }
-                            db.collection("users").document(user.getUid())
-                                    .set(mUser)
-                                    .addOnSuccessListener(aVoid -> Log.d("demo", "DocumentSnapshot successfully written!"))
-                                    .addOnFailureListener(e -> Log.w("demo", "Error writing document", e));
+        firebaseDbContext.getFirebaseAuth().signInWithCredential(credential)
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        // Sign in success, update UI with the signed-in user's information
+                        Log.d(TAG, "signInWithCredential:success");
+                        FirebaseUser user = firebaseDbContext.getFirebaseAuth().getCurrentUser();
+
+                        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                .setDisplayName(acct.getDisplayName())
+                                .build();
+                        Map<String, Object> mUser = new HashMap<>();
+                        if (acct.getGivenName() != null){
+                            mUser.put("firstName", acct.getGivenName());
+                        }
+                        if (acct.getFamilyName() != null){
+                            mUser.put("lastName", acct.getFamilyName());
+                        }
+                        if (acct.getEmail() != null){
+                            mUser.put("email", acct.getEmail());
+                        }
+                        if (acct.getPhotoUrl() != null){
+                            mUser.put("photoUrl", acct.getPhotoUrl());
+                        }
+                        firebaseDbContext.getFirebaseFirestore().collection("users").document(user.getUid())
+                                .set(mUser)
+                                .addOnSuccessListener(aVoid -> Log.d("demo", "DocumentSnapshot successfully written!"))
+                                .addOnFailureListener(e -> Log.w("demo", "Error writing document", e));
 
 
-                            user.updateProfile(profileUpdates)
-                                    .addOnCompleteListener(task1 -> {
-                                        if (task1.isSuccessful()) {
-                                            Log.d(TAG, "User profile updated");
-                                            Intent i = new Intent(LoginActivity.this, MainActivity.class);
-                                            startActivity(i);
-                                            finish();
-                                        }
-                                    });
+                        user.updateProfile(profileUpdates)
+                                .addOnCompleteListener(task1 -> {
+                                    if (task1.isSuccessful()) {
+                                        Log.d(TAG, "User profile updated");
+                                        Intent i = new Intent(LoginActivity.this, MainActivity.class);
+                                        startActivity(i);
+                                        finish();
+                                    }
+                                });
 
 //                            Intent i = new Intent(getApplicationContext(), MainActivity.class);
 //                            startActivity(i);
 //                            Toast.makeText(getApplicationContext()
 //                                    , "Welcome " + user.getDisplayName() + "!"
 //                                    , Toast.LENGTH_SHORT).show();
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w(TAG, "signInWithCredential:failure", task.getException());
-                            Toast.makeText(getApplicationContext(),
-                                    "Failed Sign In",
-                                    Toast.LENGTH_SHORT).show();
+                    } else {
+                        // If sign in fails, display a message to the user.
+                        Log.w(TAG, "signInWithCredential:failure", task.getException());
+                        Toast.makeText(getApplicationContext(),
+                                "Failed Sign In",
+                                Toast.LENGTH_SHORT).show();
 
-                        }
-
-                        // [START_EXCLUDE]
-                        // [END_EXCLUDE]
                     }
+
+                    // [START_EXCLUDE]
+                    // [END_EXCLUDE]
                 });
     }
 
@@ -219,7 +238,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        if (mAuth.getCurrentUser() != null) {
+        if (firebaseDbContext.getFirebaseAuth().getCurrentUser() != null) {
             Intent i = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(i);
             finish();

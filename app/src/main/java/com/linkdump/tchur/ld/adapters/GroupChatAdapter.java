@@ -22,11 +22,16 @@ import java.util.List;
  */
 public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.ViewHolder> {
 
+
+
+
     private List<Message> mData;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
     private Context context;
     private int lastPosition = -1;
+
+
 
     // data is passed into the constructor
     public GroupChatAdapter(Context context, List<Message> data) {
@@ -35,12 +40,17 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.View
         this.context = context;
     }
 
+
+
+
     // inflates the row layout from xml when needed
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = mInflater.inflate(R.layout.my_message, parent, false);
         return new ViewHolder(view);
     }
+
+
 
 
     // binds the data to the TextView in each row
@@ -67,6 +77,10 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.View
             lastPosition = position;
         }
     }
+
+
+
+
 
     // total number of rows
     @Override
@@ -99,15 +113,27 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.View
             if (mClickListener != null) mClickListener.onItemClick(view, getAdapterPosition());
         }
     }
+
+
+
+
+
+
     // convenience method for getting data at click position
     public Message getItem(int id) {
         return mData.get(id);
     }
 
+
+
+
     // allows clicks events to be caught
     public void setClickListener(ItemClickListener itemClickListener) {
         this.mClickListener = itemClickListener;
     }
+
+
+
 
     // parent activity will implement this method to respond to click events
     public interface ItemClickListener {

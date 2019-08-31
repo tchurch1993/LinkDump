@@ -34,8 +34,7 @@ public final class MessageHistoryUtil {
         fos.close();
     }
 
-    public static Object readMessages(Context context, String key) throws IOException,
-            ClassNotFoundException {
+    public static Object readMessages(Context context, String key) throws IOException, ClassNotFoundException {
         FileInputStream fis = context.openFileInput(key);
         ObjectInputStream ois = new ObjectInputStream(fis);
         Object object = ois.readObject();

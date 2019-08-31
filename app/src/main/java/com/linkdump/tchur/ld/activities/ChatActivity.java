@@ -1,15 +1,10 @@
 package com.linkdump.tchur.ld.activities;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v13.view.inputmethod.EditorInfoCompat;
-import android.support.v13.view.inputmethod.InputConnectionCompat;
-import android.support.v13.view.inputmethod.InputContentInfoCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.os.BuildCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -19,10 +14,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputConnection;
 import android.webkit.URLUtil;
-import android.widget.EditText;
 import android.widget.ImageButton;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -37,7 +29,7 @@ import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.adapters.GroupChatAdapter;
 import com.linkdump.tchur.ld.adapters.NewGroupChatAdapter;
 import com.linkdump.tchur.ld.objects.Message;
-import com.linkdump.tchur.ld.utils.MyEditText;
+import com.linkdump.tchur.ld.ui.MyEditText;
 import com.linkedin.urls.Url;
 import com.linkedin.urls.detection.UrlDetector;
 import com.linkedin.urls.detection.UrlDetectorOptions;
@@ -56,6 +48,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.ItemClickListener, NewGroupChatAdapter.ItemClickListener {
+
+
     private static String TAG = "ChatActivity";
     private static String OG_REGEX = "og:image|og:title|og:description|og:type|og:url|og:video";
 
@@ -67,11 +61,15 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
     private String currentGroup;
     private String groupName;
     private List<Message> messages;
+
+
     private DocumentReference userRef;
+    private DocumentReference groupRef;
+
     private List<String> userGroups;
     private SharedPreferences prefs;
     private LinearLayoutManager mLayoutManager;
-    private DocumentReference groupRef;
+
     private ImageButton imageButton;
     private MyEditText chatEditText;
 
@@ -110,6 +108,10 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
             }
         });
         mRecyclerView.setAdapter(adapter);
+
+
+
+
         groupChatListener(currentGroup);
         Toolbar toolbar = findViewById(R.id.chatToolbar);
         setSupportActionBar(toolbar);

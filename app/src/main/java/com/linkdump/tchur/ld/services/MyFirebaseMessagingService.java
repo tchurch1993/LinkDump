@@ -58,8 +58,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // are handled
         // here in onMessageReceived whether the app is in the foreground or background. Data
         // messages are the type
-        // traditionally used with GCM. Notification messages are only received here in
-        // onMessageReceived when the app
+        // traditionally used with GCM.
+        // Notification messages are only received here in onMessageReceived when the app
         // is in the foreground. When the app is in the background an automatically generated
         // notification is displayed.
         // When the user taps on the notification they are returned to the app. Messages

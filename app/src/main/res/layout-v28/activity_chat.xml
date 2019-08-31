@@ -38,7 +38,7 @@
             app:layout_constraintStart_toStartOf="parent">
 
 
-            <com.linkdump.tchur.ld.utils.MyEditText
+            <com.linkdump.tchur.ld.ui.MyEditText
                 android:id="@+id/chat_message_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"

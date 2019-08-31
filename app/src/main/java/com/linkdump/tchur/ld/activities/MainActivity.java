@@ -23,7 +23,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.common.base.Preconditions;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.snapshot.Index;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -33,7 +35,10 @@ import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.adapters.GroupNameAdapter;
+import com.linkdump.tchur.ld.interfaces.DeleteIntentBroadCastReceiver;
 import com.linkdump.tchur.ld.utils.MessageHistoryUtil;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -43,16 +48,39 @@ import java.util.Map;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements GroupNameAdapter.ItemClickListener {
+
+
+
+
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
+
+
     private DocumentReference userRef;
     private DrawerLayout mDrawerLayout;
+
+
     private CollectionReference groupsRef;
+
+
     private List<String> userGroups;
     private List<String> groupIDs;
+
+
     private RecyclerView mRecyclerView;
     private GroupNameAdapter adapter;
+
+
     private String NO_GROUP_STRING = "No Groups Found";
+
+
+
+
+
+
+
+
+
 
 
     @Override
@@ -61,6 +89,8 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         clearNotifications();
+
+
 
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 //            // Create channel to show notifications.
@@ -103,6 +133,7 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
                 intent.putExtra("groupID", groupId);
                 startActivity(intent);
             } else {
+
                 Log.d("demo", "in else of getIntent checks");
                 if (getIntent().getStringExtra("link") != null) {
                     Log.d("demo", "inside link Intent thing: " + getIntent().getStringExtra("link"));
@@ -172,6 +203,11 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
                 });
     }
 
+
+
+
+
+
     public void subscriptionHandler() {
         for (String groupthing : groupIDs) {
             FirebaseMessaging.getInstance().subscribeToTopic(groupthing);
@@ -180,36 +216,74 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
 
 
     public void getGroupIDs() {
-        userRef.get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                if (task.getResult().exists()) {
-                    FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(task2 -> {
-                        if (task2.isSuccessful()) {
-                            if (!task2.getResult().getToken().equals(task.getResult().get("token"))) {
+
+
+        userRef.get().addOnCompleteListener(task ->
+        {
+            if (task.isSuccessful())
+            {
+
+
+                if (task.getResult().exists())
+                {
+
+
+
+
+
+                    FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(task2 ->
+                    {
+                        if (task2.isSuccessful())
+                        {
+                            if (!task2.getResult().getToken().equals(task.getResult().get("token")))
+                            {
                                 Map<String, Object> data = new HashMap<>();
                                 data.put("token", task2.getResult().getToken());
                                 db.collection("users").document(mAuth.getUid()).set(data, SetOptions.merge()).addOnCompleteListener(task1 -> {
-                                    if (task1.isSuccessful()) {
+                                    if (task1.isSuccessful())
+                                    {
                                         Log.d("demo", "Successfully updated token in DB");
                                     }
                                 });
-                            } else {
+                            }
+                            else
+                            {
                                 Log.d("demo", "has valid token");
                             }
                         }
                     });
+
+
+
+
                     List<String> tempGroupIDs;
                     tempGroupIDs = (List<String>) task.getResult().get("groups");
-                    if (!(tempGroupIDs == null)) {
+                    if (!(tempGroupIDs == null))
+                    {
                         getGroupNames(tempGroupIDs);
-                    } else {
+                    }
+                    else
+                        {
                         userGroups.add(NO_GROUP_STRING);
                         adapter.notifyDataSetChanged();
                     }
+
+
+
                 }
             }
         });
+
+
     }
+
+
+
+
+
+
+
+
 
     public void getGroupNames(final List<String> mGroupIDs) {
         groupsRef.get().addOnCompleteListener(task -> {
@@ -234,6 +308,11 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
     }
 
 
+
+
+
+
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -256,11 +335,21 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
         }
     }
 
+
+
+
+
+
     @Override
     protected void onResume() {
         super.onResume();
         clearNotifications();
     }
+
+
+
+
+
 
     @Override
     public void onItemClick(View view, int position) {
@@ -278,8 +367,15 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
     }
 
 
+
+
+
+
+
     public void clearNotifications() {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
         notificationManager.cancelAll();
     }
+
+
 }

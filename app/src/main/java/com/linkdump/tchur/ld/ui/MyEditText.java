@@ -1,4 +1,4 @@
-package com.linkdump.tchur.ld.utils;
+package com.linkdump.tchur.ld.ui;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -39,8 +39,7 @@ public class MyEditText extends android.support.v7.widget.AppCompatEditText {
     @Override
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
         final InputConnection ic = super.onCreateInputConnection(outAttrs);
-        EditorInfoCompat.setContentMimeTypes(outAttrs,
-                imgTypeString);
+        EditorInfoCompat.setContentMimeTypes(outAttrs, imgTypeString);
         return InputConnectionCompat.createWrapper(ic, outAttrs, callback);
     }
 
