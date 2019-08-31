@@ -38,6 +38,11 @@ import java.util.Objects;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
+
+
+
+
+
     private static final String TAG = "MyFirebaseMessagingService";
     public static final String KEY_TEXT_REPLY = "key_text_reply";
     public static final int NOTIFICATION_ID = 101;
@@ -45,11 +50,21 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private SharedPreferences prefs;
 
 
+
+
+
+
+
     /**
      * Called when message is received.
      *
      * @param remoteMessage Object representing the message received from Firebase Cloud Messaging.
      */
+
+
+
+
+
     // [START receive_message]
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
@@ -254,25 +269,41 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         .setContentIntent(pendingIntent);
 
 
-        NotificationManager notificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
 
         // Since android Oreo notification channel is needed.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(channelId,
-                    "test",
-                    NotificationManager.IMPORTANCE_HIGH);
-//            AudioAttributes attributes = new AudioAttributes.Builder()
-//                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-//                    .build();
-//            channel.setSound(sound, attributes);
-            notificationManager.createNotificationChannel(channel);
-        }
+        checkBuildVersion(channelId, notificationManager);
 
         notificationManager.notify(intGroupReCode, notificationBuilder.build());
         Log.d(TAG, "showing notification");
     }
+
+
+
+
+
+    private void checkBuildVersion(String channelId, NotificationManager notificationManager) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        {
+
+            NotificationChannel channel = new NotificationChannel(channelId, "test", NotificationManager.IMPORTANCE_HIGH);
+
+            //        AudioAttributes attributes = new AudioAttributes.Builder()
+            //            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+            //            .build();
+            //        channel.setSound(sound, attributes);
+
+
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+
+
+
+
+
 
     public void buildUpdateNotification() {
 

@@ -85,6 +85,8 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+
         setTheme(R.style.LinkDumpDark);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);

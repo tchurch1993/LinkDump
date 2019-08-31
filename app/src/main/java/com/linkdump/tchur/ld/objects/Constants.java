@@ -12,4 +12,5 @@ package com.linkdump.tchur.ld.objects;
 public class Constants {
     public static final String NO_GROUP_STRING = "No Groups Found";
     public static final String NO_USERS_FOUND = "No Users Found";
+    public static final String TAG = "Log";
 }

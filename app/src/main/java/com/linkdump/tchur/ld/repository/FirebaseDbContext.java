@@ -8,7 +8,6 @@ import com.linkdump.tchur.ld.interfaces.IFirebaseDbContext;
 public class FirebaseDbContext implements IFirebaseDbContext {
 
 
-
     private FirebaseAuth firebaseAuth;
     private FirebaseFirestore firebaseFirestore;
     private GoogleSignInClient googleSignInClient;
@@ -18,18 +17,14 @@ public class FirebaseDbContext implements IFirebaseDbContext {
     private DbSet groupReferences;
 
 
-    public FirebaseDbContext(){
+    public FirebaseDbContext() {
         firebaseAuth = FirebaseAuth.getInstance();
-        firebaseFirestore= FirebaseFirestore.getInstance();
+        firebaseFirestore = FirebaseFirestore.getInstance();
     }
-
-
 
 
     @Override
     public void findById() {
-
-
 
 
     }
@@ -38,22 +33,16 @@ public class FirebaseDbContext implements IFirebaseDbContext {
     public void delete() {
 
 
-
-
     }
 
     @Override
     public void update() {
 
 
-
-
     }
 
     @Override
     public void create() {
-
-
 
 
     }

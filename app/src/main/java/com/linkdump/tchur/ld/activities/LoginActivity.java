@@ -51,9 +51,12 @@ public class LoginActivity extends AppCompatActivity {
 
 
     //context
-    private GoogleSignInClient mGoogleSignInClient;
-
     private FirebaseDbContext firebaseDbContext;
+
+
+
+
+
     //app event adapter
 
 
@@ -72,19 +75,8 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-       firebaseDbContext = new FirebaseDbContext();
-       // mAuth = FirebaseAuth.getInstance();
-        //db = FirebaseFirestore.getInstance();
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // Create channel to show notifications.
-            String channelId = getString(R.string.default_notification_channel_id);
-            String channelName = "chat";
-            NotificationManager notificationManager =
-                    getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(new NotificationChannel(channelId,
-                    channelName, NotificationManager.IMPORTANCE_LOW));
-        }
+        firebaseDbContext = new FirebaseDbContext();
+        checkBuildVersion();
 
         editTextUsername = findViewById(R.id.editTextEmail);
         editTextPassword = findViewById(R.id.editTextPassword);
@@ -97,8 +89,7 @@ public class LoginActivity extends AppCompatActivity {
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build();
-
-        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+        firebaseDbContext.setGoogleSignInClient(GoogleSignIn.getClient(this, gso));
 
         findViewById(R.id.buttonSignup).setOnClickListener(view -> {
             Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
@@ -107,14 +98,19 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         findViewById(R.id.buttonLogin).setOnClickListener(view -> {
+
+
+
             String email = editTextUsername.getText().toString();
             String password = editTextPassword.getText().toString();
 
             if (email.equals("")) {
                 Toast.makeText(LoginActivity.this, "Enter Email", Toast.LENGTH_SHORT).show();
-            } else if (password.equals("")) {
+            } else if (password.equals(""))
+            {
                 Toast.makeText(LoginActivity.this, "Enter Password", Toast.LENGTH_SHORT).show();
-            } else {
+            } else
+                {
                 progressBar.setVisibility(View.VISIBLE);
                 firebaseDbContext.getFirebaseAuth().signInWithEmailAndPassword(email, password)
                         .addOnCompleteListener(LoginActivity.this, task -> {
@@ -149,8 +145,18 @@ public class LoginActivity extends AppCompatActivity {
 
     }
 
+    private void checkBuildVersion() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Create channel to show notifications.
+            String channelId = getString(R.string.default_notification_channel_id);
+            String channelName = "chat";
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW));
+        }
+    }
+
     private void signIn() {
-        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+        Intent signInIntent = firebaseDbContext.getGoogleSignInClient().getSignInIntent();
         startActivityForResult(signInIntent, 101);
     }
 
@@ -158,13 +164,16 @@ public class LoginActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == 101) {
+        if (requestCode == 101)
+        {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-            try {
+            try
+            {
                 GoogleSignInAccount account = task.getResult(ApiException.class);
                 firebaseAuthWithGoogle(account);
 
-            } catch (ApiException e) {
+            } catch (ApiException e)
+            {
                 Log.w(TAG, "Google sign in failed", e);
             }
         }
