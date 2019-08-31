@@ -31,6 +31,8 @@ import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.repository.FirebaseDbContext;
+import com.linkdump.tchur.ld.ui.ui_containers.LoginViewCoordinator;
+import com.linkdump.tchur.ld.ui.ui_containers.ViewCoordinator;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,111 +40,94 @@ import java.util.Map;
 public class LoginActivity extends AppCompatActivity {
 
 
-
     //ui
-    EditText editTextUsername, editTextPassword;
-    ProgressBar progressBar;
-
-
-
-    //business logic
-
-
-
-
-    //context
-    private FirebaseDbContext firebaseDbContext;
+    LoginViewCoordinator loginViewCoordinator;
+    FirebaseDbContext firebaseDbContext;
+    final String TAG = "Log";
 
 
 
 
-
-    //app event adapter
-
-
-
-
-    //data
-    private final String TAG = "Log";
+    /*
 
 
 
 
-
-
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
 
+        setContentView(R.layout.activity_login);
         firebaseDbContext = new FirebaseDbContext();
+        loginViewCoordinator = new LoginViewCoordinator(LoginActivity.this, this);
         checkBuildVersion();
 
-        editTextUsername = findViewById(R.id.editTextEmail);
-        editTextPassword = findViewById(R.id.editTextPassword);
-        progressBar = findViewById(R.id.progressBar);
+
+
+
+
 
         SharedPreferences prefs = getSharedPreferences("info", MODE_PRIVATE);
-        editTextUsername.setText(prefs.getString("email", ""));
+        loginViewCoordinator.editTextUsername.setText(prefs.getString("email", ""));
+
+
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build();
+
         firebaseDbContext.setGoogleSignInClient(GoogleSignIn.getClient(this, gso));
-
-        findViewById(R.id.buttonSignup).setOnClickListener(view -> {
-            Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
-            startActivity(intent);
-            finish();
-        });
-
-        findViewById(R.id.buttonLogin).setOnClickListener(view -> {
+        loginViewCoordinator.buttonSignUp.setOnClickListener(view -> moveToSignUp());
+        loginViewCoordinator.buttonLogin.setOnClickListener(v -> login());
+        loginViewCoordinator.googleSignInButton.setOnClickListener(v -> signIn());
 
 
+    }
 
-            String email = editTextUsername.getText().toString();
-            String password = editTextPassword.getText().toString();
+    private void moveToSignUp() {
+        Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
+        startActivity(intent);
+        finish();
+    }
 
-            if (email.equals("")) {
-                Toast.makeText(LoginActivity.this, "Enter Email", Toast.LENGTH_SHORT).show();
-            } else if (password.equals(""))
-            {
-                Toast.makeText(LoginActivity.this, "Enter Password", Toast.LENGTH_SHORT).show();
-            } else
-                {
-                progressBar.setVisibility(View.VISIBLE);
-                firebaseDbContext.getFirebaseAuth().signInWithEmailAndPassword(email, password)
-                        .addOnCompleteListener(LoginActivity.this, task -> {
-                            if (task.isSuccessful()) {
-                                // Sign in success, update UI with the signed-in user's information
-                                Log.d(TAG, "signInWithEmail:success");
-                                FirebaseUser user = firebaseDbContext.getFirebaseAuth().getCurrentUser();
-                                progressBar.setVisibility(View.INVISIBLE);
+    private void login() {
+        String email = loginViewCoordinator.editTextUsername.getText().toString();
+        String password = loginViewCoordinator.editTextPassword.getText().toString();
 
-
-                                Intent i = new Intent(LoginActivity.this, MainActivity.class);
-                                startActivity(i);
-                                finish();
-                            } else {
-                                // If sign in fails, display a message to the user.
-                                Log.w(TAG, "signInWithEmail:failure", task.getException());
-                                progressBar.setVisibility(View.INVISIBLE);
+        if (email.equals("")) {
+            Toast.makeText(LoginActivity.this, "Enter Email", Toast.LENGTH_SHORT).show();
+        } else if (password.equals("")) {
+            Toast.makeText(LoginActivity.this, "Enter Password", Toast.LENGTH_SHORT).show();
+        } else {
+            loginViewCoordinator.progressBar.setVisibility(View.VISIBLE);
+            firebaseDbContext.getFirebaseAuth().signInWithEmailAndPassword(email, password)
+                    .addOnCompleteListener(LoginActivity.this, task -> {
+                        if (task.isSuccessful()) {
+                            // Sign in success, update UI with the signed-in user's information
+                            Log.d(TAG, "signInWithEmail:success");
+                            FirebaseUser user = firebaseDbContext.getFirebaseAuth().getCurrentUser();
+                            loginViewCoordinator.progressBar.setVisibility(View.INVISIBLE);
 
 
-                                Toast.makeText(LoginActivity.this, "Authentication failed.",
-                                        Toast.LENGTH_SHORT).show();
-                            }
-
-                            // ...
-                        });
-
-            }
-        });
-
-        findViewById(R.id.googleSignInButton).setOnClickListener(v -> signIn());
+                            Intent i = new Intent(LoginActivity.this, MainActivity.class);
+                            startActivity(i);
+                            finish();
+                        } else {
+                            // If sign in fails, display a message to the user.
+                            Log.w(TAG, "signInWithEmail:failure", task.getException());
+                            loginViewCoordinator.progressBar.setVisibility(View.INVISIBLE);
 
 
+                            Toast.makeText(LoginActivity.this, "Authentication failed.",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+
+                        // ...
+                    });
+
+        }
     }
 
     private void checkBuildVersion() {
@@ -160,31 +145,42 @@ public class LoginActivity extends AppCompatActivity {
         startActivityForResult(signInIntent, 101);
     }
 
+
+
+
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == 101)
-        {
+        if (requestCode == 101) {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-            try
-            {
+            try {
                 GoogleSignInAccount account = task.getResult(ApiException.class);
                 firebaseAuthWithGoogle(account);
 
-            } catch (ApiException e)
-            {
+            } catch (ApiException e) {
                 Log.w(TAG, "Google sign in failed", e);
             }
         }
     }
+
+
+
+
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
         Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
         // [START_EXCLUDE silent]
         // [END_EXCLUDE]
 
+
+
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
+
+
+
         firebaseDbContext.getFirebaseAuth().signInWithCredential(credential)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
@@ -196,16 +192,16 @@ public class LoginActivity extends AppCompatActivity {
                                 .setDisplayName(acct.getDisplayName())
                                 .build();
                         Map<String, Object> mUser = new HashMap<>();
-                        if (acct.getGivenName() != null){
+                        if (acct.getGivenName() != null) {
                             mUser.put("firstName", acct.getGivenName());
                         }
-                        if (acct.getFamilyName() != null){
+                        if (acct.getFamilyName() != null) {
                             mUser.put("lastName", acct.getFamilyName());
                         }
-                        if (acct.getEmail() != null){
+                        if (acct.getEmail() != null) {
                             mUser.put("email", acct.getEmail());
                         }
-                        if (acct.getPhotoUrl() != null){
+                        if (acct.getPhotoUrl() != null) {
                             mUser.put("photoUrl", acct.getPhotoUrl());
                         }
                         firebaseDbContext.getFirebaseFirestore().collection("users").document(user.getUid())
@@ -242,6 +238,11 @@ public class LoginActivity extends AppCompatActivity {
                     // [END_EXCLUDE]
                 });
     }
+
+
+
+
+
 
     @Override
     protected void onStart() {
