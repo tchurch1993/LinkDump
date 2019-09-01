@@ -22,6 +22,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.common.base.Preconditions;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -58,9 +59,11 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_login);
+        //setContentView(R.layout.activity_login);
         firebaseDbContext = new FirebaseDbContext();
         loginViewCoordinator = new LoginViewCoordinator(LoginActivity.this, this);
+        loginViewCoordinator.initialiseViewFromXml(R.layout.activity_login);
+        setContentView(loginViewCoordinator.getRootView());
         checkBuildVersion();
 
 
@@ -79,6 +82,7 @@ public class LoginActivity extends AppCompatActivity {
                 .build();
 
         firebaseDbContext.setGoogleSignInClient(GoogleSignIn.getClient(this, gso));
+
         loginViewCoordinator.buttonSignUp.setOnClickListener(view -> moveToSignUp());
         loginViewCoordinator.buttonLogin.setOnClickListener(v -> login());
         loginViewCoordinator.googleSignInButton.setOnClickListener(v -> signIn());

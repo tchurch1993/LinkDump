@@ -6,7 +6,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
-
+import com.google.android.gms.common.SignInButton;
 import com.linkdump.tchur.ld.R;
 
 public class LoginViewCoordinator extends ViewCoordinator {
@@ -17,18 +17,13 @@ public class LoginViewCoordinator extends ViewCoordinator {
     public ProgressBar progressBar;
     public Button buttonSignUp;
     public Button buttonLogin;
-    public Button googleSignInButton;
+    public SignInButton googleSignInButton;
 
 
     public LoginViewCoordinator(Context context, AppCompatActivity appCompatActivity) {
         super(context, appCompatActivity);
 
-        editTextUsername = appCompatActivity.findViewById(R.id.editTextEmail);
-        editTextPassword = appCompatActivity.findViewById(R.id.editTextPassword);
-        progressBar = appCompatActivity.findViewById(R.id.progressBar);
-        buttonSignUp = appCompatActivity.findViewById(R.id.buttonSignup);
-        buttonLogin = appCompatActivity.findViewById(R.id.buttonLogin);
-        googleSignInButton = appCompatActivity.findViewById(R.id.googleSignInButton);
+
 
     }
 
@@ -36,10 +31,12 @@ public class LoginViewCoordinator extends ViewCoordinator {
     @Override
     public void PostViewInit(View view) {
 
-
-
-
-
+        editTextUsername = view.findViewById(R.id.editTextEmail);
+        editTextPassword = view.findViewById(R.id.editTextPassword);
+        progressBar = view.findViewById(R.id.progressBar);
+        buttonSignUp = view.findViewById(R.id.buttonSignup);
+        buttonLogin = view.findViewById(R.id.buttonLogin);
+        googleSignInButton = view.findViewById(R.id.googleSignInButton);
 
     }
 }

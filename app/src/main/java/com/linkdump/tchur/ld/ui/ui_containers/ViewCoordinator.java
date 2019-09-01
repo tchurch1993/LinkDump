@@ -25,8 +25,8 @@ public abstract class ViewCoordinator {
 
     public ViewCoordinator initialiseViewFromXml(int xmlId) {
         LayoutInflater inflater = LayoutInflater.from(context);
-        View contentView = inflater.inflate(xmlId, null);
-        PostViewInit(contentView);
+        rootView = inflater.inflate(xmlId, null);
+        PostViewInit(rootView);
         return this;
     }
 
