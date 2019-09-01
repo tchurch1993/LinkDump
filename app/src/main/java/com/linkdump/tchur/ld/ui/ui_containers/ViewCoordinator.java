@@ -27,11 +27,12 @@ public abstract class ViewCoordinator {
         LayoutInflater inflater = LayoutInflater.from(context);
         rootView = inflater.inflate(xmlId, null);
         PostViewInit(rootView);
+        WireEvents(rootView,appCompatActivity);
         return this;
     }
 
     public abstract void PostViewInit(View view);
-
+    public abstract void WireEvents(View view, AppCompatActivity appCompatActivity);
     public ArrayList<View> getViewRepo() {
         return viewRepo;
     }

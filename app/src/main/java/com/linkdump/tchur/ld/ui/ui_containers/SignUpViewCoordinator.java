@@ -25,6 +25,14 @@ public class SignUpViewCoordinator extends ViewCoordinator {
         super(context, appCompatActivity);
 
 
+
+
+    }
+
+    @Override
+    public void PostViewInit(View view) {
+
+
         editTextEmail = appCompatActivity.findViewById(R.id.editTextEmail);
         editTextPassword = appCompatActivity.findViewById(R.id.editTextPassword);
         editTextPasswordConfirm = appCompatActivity.findViewById(R.id.editTextPasswordConfirm);
@@ -33,10 +41,10 @@ public class SignUpViewCoordinator extends ViewCoordinator {
         cancelButton = appCompatActivity.findViewById(R.id.buttonCancel);
         signUpButton = appCompatActivity.findViewById(R.id.buttonSignup);
 
-    }
+}
 
     @Override
-    public void PostViewInit(View view) {
+    public void WireEvents(View view, AppCompatActivity appCompatActivity) {
 
 
 

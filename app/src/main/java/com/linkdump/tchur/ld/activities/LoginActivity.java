@@ -32,6 +32,7 @@ import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.repository.FirebaseDbContext;
+import com.linkdump.tchur.ld.repository.sugar_orm.AppConfig;
 import com.linkdump.tchur.ld.ui.ui_containers.LoginViewCoordinator;
 import com.linkdump.tchur.ld.ui.ui_containers.ViewCoordinator;
 
@@ -87,7 +88,7 @@ public class LoginActivity extends AppCompatActivity {
         loginViewCoordinator.buttonLogin.setOnClickListener(v -> login());
         loginViewCoordinator.googleSignInButton.setOnClickListener(v -> signIn());
 
-
+        AppConfig config = AppConfig.findById(AppConfig.class, 1L);
     }
 
     private void moveToSignUp() {

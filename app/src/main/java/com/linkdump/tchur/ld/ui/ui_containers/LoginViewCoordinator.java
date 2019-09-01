@@ -39,4 +39,16 @@ public class LoginViewCoordinator extends ViewCoordinator {
         googleSignInButton = view.findViewById(R.id.googleSignInButton);
 
     }
+
+    @Override
+    public void WireEvents(View view, AppCompatActivity appCompatActivity) {
+
+
+
+
+
+
+
+
+    }
 }
