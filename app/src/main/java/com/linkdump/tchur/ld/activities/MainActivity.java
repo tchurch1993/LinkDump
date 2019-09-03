@@ -37,6 +37,7 @@ import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.adapters.GroupNameAdapter;
 import com.linkdump.tchur.ld.interfaces.DeleteIntentBroadCastReceiver;
 import com.linkdump.tchur.ld.utils.MessageHistoryUtil;
+import com.linkdump.tchur.ld.utils.Navigation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -54,34 +55,14 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
 
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
-
-
     private DocumentReference userRef;
     private DrawerLayout mDrawerLayout;
-
-
     private CollectionReference groupsRef;
-
-
     private List<String> userGroups;
     private List<String> groupIDs;
-
-
     private RecyclerView mRecyclerView;
     private GroupNameAdapter adapter;
-
-
     private String NO_GROUP_STRING = "No Groups Found";
-
-
-
-
-
-
-
-
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -177,6 +158,11 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
                     // close drawer when item is tapped
                     mDrawerLayout.closeDrawers();
                     switch (menuItem.getItemId()) {
+                        case R.id.settings:
+                            Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                            startActivity(intent);
+                            finish();
+                            return true;
                         case R.id.sign_out:
                             SharedPreferences prefs = getSharedPreferences("info", MODE_PRIVATE);
                             SharedPreferences.Editor editor = prefs.edit();
@@ -359,11 +345,14 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
             Log.d("demo", "Group IDs: " + mID);
         }
         if (groupIDs.size() > 0) {
+
             Intent intent = new Intent(MainActivity.this, ChatActivity.class);
             intent.putExtra("groupID", groupIDs.get(position));
             intent.putExtra("groupName", userGroups.get(position));
             startActivity(intent);
+
         } else {
+
             Toast.makeText(this, "Please add a Group", Toast.LENGTH_SHORT).show();
         }
     }

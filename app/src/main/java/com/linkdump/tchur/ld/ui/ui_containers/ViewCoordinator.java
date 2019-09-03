@@ -5,11 +5,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 
-import com.linkdump.tchur.ld.R;
-
 import java.util.ArrayList;
 
+
+
+
+
+
 public abstract class ViewCoordinator {
+
 
     ArrayList<View> viewRepo;
     View rootView;
@@ -31,8 +35,23 @@ public abstract class ViewCoordinator {
         return this;
     }
 
+
+
+    /*
+
+      Abstracts , implemented in the constuctor
+
+     */
     public abstract void PostViewInit(View view);
     public abstract void WireEvents(View view, AppCompatActivity appCompatActivity);
+
+
+
+    /*
+
+        getters and setters
+
+     */
     public ArrayList<View> getViewRepo() {
         return viewRepo;
     }

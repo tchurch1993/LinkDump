@@ -20,6 +20,8 @@ public class LoginViewCoordinator extends ViewCoordinator {
     public SignInButton googleSignInButton;
 
 
+
+
     public LoginViewCoordinator(Context context, AppCompatActivity appCompatActivity) {
         super(context, appCompatActivity);
 

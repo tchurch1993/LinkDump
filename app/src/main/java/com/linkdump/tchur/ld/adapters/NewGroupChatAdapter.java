@@ -31,6 +31,13 @@ import java.util.List;
  * Bow down to my greatness.
  */
 public class NewGroupChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
+
+    private static final int DEFAULT_MESSAGE_TYPE = 0;
+    private static final int LINK_MESSAGE_TYPE = 1;
+    private static final int IMAGE_MESSAGE_TYPE = 2;
+
+
     private static final String TAG = NewGroupChatAdapter.class.getSimpleName();
 
     private List<Message> mData;
@@ -72,196 +79,216 @@ public class NewGroupChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
         Message message = mData.get(position);
         setAnimation(viewHolder.itemView, position);
-        CircularProgressDrawable circularProgressDrawable = new CircularProgressDrawable(context);
-        circularProgressDrawable.setStrokeWidth(5f);
-        circularProgressDrawable.setCenterRadius(30f);
-        circularProgressDrawable.start();
+
+        CircularProgressDrawable circularProgressDrawable = showProgress();
+
         switch (viewHolder.getItemViewType()) {
-            case 0:
-                DefaultViewHolder defaulVH = (DefaultViewHolder) viewHolder;
-                Log.d(TAG, "in bindViewholder case 0");
-                if (mData.get(position).getIsUser()) {
-                    //if me
-                    defaulVH.theirLayout.setVisibility(View.GONE);
-                    defaulVH.myLayout.setVisibility(View.VISIBLE);
-                    defaulVH.myMessageTextView.setText(message.getMessage());
-                } else {
-                    //if them
-                    defaulVH.theirLayout.setVisibility(View.VISIBLE);
-                    defaulVH.myLayout.setVisibility(View.GONE);
-                    defaulVH.theirMessageTextView.setText(message.getMessage());
-                    defaulVH.userName.setText(message.getUserName());
-                }
+            case DEFAULT_MESSAGE_TYPE:
+                SetDefaultMessageFormat((DefaultViewHolder) viewHolder, position, message);
                 return;
-            case 1:
-                Log.d(TAG, "in bindViewholder case 1");
-                LinkMessageViewHolder linkVH = ((LinkMessageViewHolder) viewHolder);
-                if (mData.get(position).getIsUser()) {
-                    //if me
-                    linkVH.theirLayout.setVisibility(View.GONE);
-                    linkVH.myLayout.setVisibility(View.VISIBLE);
-                    linkVH.myMessageTextView.setText(message.getMessage());
-
-                    if (message.getLinkTitle() != null) {
-                        linkVH.linkTitle.setText(message.getLinkTitle());
-                    } else {
-                        linkVH.linkTitle.setVisibility(View.GONE);
-                    }
-                    if (message.getLinkDescription() != null) {
-                        linkVH.linkDescription.setText(message.getLinkDescription());
-                    } else {
-                        linkVH.linkDescription.setVisibility(View.GONE);
-                    }
-                    if (message.getLinkVideo() != null) {
-
-                    }
-                    if (message.getLinkImage() != null) {
-                        Log.d(TAG, "image url: " + message.getLinkImage());
-                        if (getFormat(message.getLinkImage()).contains(".gif")) {
-                            Glide.with(context).asGif().load(message.getLinkImage())
-                                    .apply(
-                                            new RequestOptions()
-                                                    .transform(new RoundedCorners(8))
-                                                    .placeholder(circularProgressDrawable)
-                                                    .timeout(10000))
-                                    .into(linkVH.linkImage);
-                        } else {
-                            Glide.with(context).load(message.getLinkImage())
-                                    .apply(
-                                            new RequestOptions()
-                                                    .transform(new RoundedCorners(16))
-                                                    .placeholder(circularProgressDrawable)
-                                                    .timeout(10000))
-                                    .into(linkVH.linkImage);
-                        }
-
-                    } else {
-                        linkVH.linkImage.setVisibility(View.GONE);
-                    }
-                    if (message.getLinkUrl() != null) {
-                        linkVH.richLink.setClickable(true);
-                        linkVH.richLink.setOnClickListener(v -> {
-                            Intent i = new Intent(Intent.ACTION_VIEW);
-                            i.setData(Uri.parse(message.getLinkUrl()));
-                            context.startActivity(i);
-                        });
-                    }
-
-                } else {
-                    //if them
-                    linkVH.theirLayout.setVisibility(View.VISIBLE);
-                    linkVH.myLayout.setVisibility(View.GONE);
-                    linkVH.theirMessageTextView.setText(message.getMessage());
-                    linkVH.userName.setText(message.getUserName());
-                    if (message.getLinkTitle() != null) {
-                        linkVH.theirLinkTitle.setText(message.getLinkTitle());
-                    } else {
-                        linkVH.theirLinkTitle.setVisibility(View.GONE);
-                    }
-                    if (message.getLinkDescription() != null) {
-                        linkVH.theirLinkDescription.setText(message.getLinkDescription());
-                    } else {
-                        linkVH.theirLinkDescription.setVisibility(View.GONE);
-                    }
-                    if (message.getLinkVideo() != null) {
-
-                    }
-                    if (message.getLinkImage() != null) {
-                        Log.d(TAG, "image url: " + message.getLinkImage());
-                        if (getFormat(message.getLinkImage()).contains(".gif")) {
-                            Glide.with(context).asGif().load(message.getLinkImage())
-                                    .apply(
-                                            new RequestOptions()
-                                                    .transform(new RoundedCorners(16))
-                                                    .placeholder(circularProgressDrawable)
-                                                    .timeout(10000))
-                                    .into(linkVH.theirLinkImage);
-                        } else {
-                            Glide.with(context).load(message.getLinkImage())
-                                    .apply(
-                                            new RequestOptions()
-                                                    .transform(new RoundedCorners(16))
-                                                    .placeholder(circularProgressDrawable)
-                                                    .timeout(10000))
-                                    .into(linkVH.theirLinkImage);
-                        }
-
-                    } else {
-                        linkVH.theirLinkImage.setVisibility(View.GONE);
-                    }
-                    if (message.getLinkUrl() != null) {
-                        linkVH.theirRichLink.setClickable(true);
-                        linkVH.theirRichLink.setOnClickListener(v -> {
-                            Intent i = new Intent(Intent.ACTION_VIEW);
-                            i.setData(Uri.parse(message.getLinkUrl()));
-                            context.startActivity(i);
-                        });
-                    }
-                }
+            case LINK_MESSAGE_TYPE:
+                SetLinkMessageFormat((LinkMessageViewHolder) viewHolder, position, message, circularProgressDrawable);
                 return;
-            case 2:
-                ImageMessageViewHolder imageVH = (ImageMessageViewHolder) viewHolder;
-                Log.d(TAG, "in bindViewholder case 2");
-                if (mData.get(position).getIsUser()) {
-                    //if me
-                    imageVH.theirLayout.setVisibility(View.GONE);
-                    imageVH.myLayout.setVisibility(View.VISIBLE);
-                    if (message.getImageUrl() != null) {
-                        if (getFormat(message.getImageUrl()).contains(".gif")) {
-                            Glide.with(context).asGif().load(message.getImageUrl())
-                                    .apply(
-                                            new RequestOptions()
-                                                    .placeholder(circularProgressDrawable)
-                                                    .transform(new RoundedCorners(16))
-                                                    .timeout(10000)
-                                    )
-                                    .into(imageVH.imageView);
-                        } else {
-                            Glide.with(context).load(message.getImageUrl())
-                                    .apply(
-                                            new RequestOptions()
-                                                    .placeholder(circularProgressDrawable)
-                                                    .transform(new RoundedCorners(16))
-                                                    .timeout(10000)
-                                    )
-                                    .into(imageVH.imageView);
-                        }
-                    } else {
-                        imageVH.imageView.setVisibility(View.GONE);
-                    }
-                } else {
-                    //if them
-                    imageVH.theirLayout.setVisibility(View.VISIBLE);
-                    imageVH.myLayout.setVisibility(View.GONE);
-                    imageVH.userName.setText(message.getUserName());
-                    if (message.getImageUrl() != null) {
-                        if (getFormat(message.getImageUrl()).contains(".gif")) {
-                            Glide.with(context).asGif().load(message.getImageUrl())
-                                    .apply(
-                                            new RequestOptions()
-                                                    .placeholder(circularProgressDrawable)
-                                                    .transform(new RoundedCorners(16))
-                                                    .timeout(10000)
-                                    )
-                                    .into(imageVH.theirImageView);
-                        } else {
-                            Glide.with(context).load(message.getImageUrl())
-                                    .apply(
-                                            new RequestOptions()
-                                                    .placeholder(circularProgressDrawable)
-                                                    .transform(new RoundedCorners(16))
-                                                    .timeout(10000)
-                                    )
-                                    .into(imageVH.theirImageView);
-                        }
-                    } else {
-                        imageVH.theirImageView.setVisibility(View.GONE);
-                    }
-                }
+            case IMAGE_MESSAGE_TYPE:
+                SetImageMessageType((ImageMessageViewHolder) viewHolder, position, message, circularProgressDrawable);
 
         }
 
 
+    }
+
+    @NonNull
+    private CircularProgressDrawable showProgress() {
+        CircularProgressDrawable circularProgressDrawable = new CircularProgressDrawable(context);
+        circularProgressDrawable.setStrokeWidth(5f);
+        circularProgressDrawable.setCenterRadius(30f);
+        circularProgressDrawable.start();
+        return circularProgressDrawable;
+    }
+
+    private void SetImageMessageType(@NonNull ImageMessageViewHolder viewHolder, int position, Message message, CircularProgressDrawable circularProgressDrawable) {
+        ImageMessageViewHolder imageVH = viewHolder;
+        Log.d(TAG, "in bindViewholder case 2");
+        if (mData.get(position).getIsUser()) {
+            //if me
+            imageVH.theirLayout.setVisibility(View.GONE);
+            imageVH.myLayout.setVisibility(View.VISIBLE);
+            if (message.getImageUrl() != null) {
+                if (getFormat(message.getImageUrl()).contains(".gif")) {
+                    Glide.with(context).asGif().load(message.getImageUrl())
+                            .apply(
+                                    new RequestOptions()
+                                            .placeholder(circularProgressDrawable)
+                                            .transform(new RoundedCorners(16))
+                                            .timeout(10000)
+                            )
+                            .into(imageVH.imageView);
+                } else {
+                    Glide.with(context).load(message.getImageUrl())
+                            .apply(
+                                    new RequestOptions()
+                                            .placeholder(circularProgressDrawable)
+                                            .transform(new RoundedCorners(16))
+                                            .timeout(10000)
+                            )
+                            .into(imageVH.imageView);
+                }
+            } else {
+                imageVH.imageView.setVisibility(View.GONE);
+            }
+        } else {
+            //if them
+            imageVH.theirLayout.setVisibility(View.VISIBLE);
+            imageVH.myLayout.setVisibility(View.GONE);
+            imageVH.userName.setText(message.getUserName());
+            if (message.getImageUrl() != null) {
+                if (getFormat(message.getImageUrl()).contains(".gif")) {
+                    Glide.with(context).asGif().load(message.getImageUrl())
+                            .apply(
+                                    new RequestOptions()
+                                            .placeholder(circularProgressDrawable)
+                                            .transform(new RoundedCorners(16))
+                                            .timeout(10000)
+                            )
+                            .into(imageVH.theirImageView);
+                } else {
+                    Glide.with(context).load(message.getImageUrl())
+                            .apply(
+                                    new RequestOptions()
+                                            .placeholder(circularProgressDrawable)
+                                            .transform(new RoundedCorners(16))
+                                            .timeout(10000)
+                            )
+                            .into(imageVH.theirImageView);
+                }
+            } else {
+                imageVH.theirImageView.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    private void SetLinkMessageFormat(@NonNull LinkMessageViewHolder viewHolder, int position, Message message, CircularProgressDrawable circularProgressDrawable) {
+        Log.d(TAG, "in bindViewholder case 1");
+        LinkMessageViewHolder linkVH = viewHolder;
+        if (mData.get(position).getIsUser()) {
+            //if me
+            linkVH.theirLayout.setVisibility(View.GONE);
+            linkVH.myLayout.setVisibility(View.VISIBLE);
+            linkVH.myMessageTextView.setText(message.getMessage());
+
+            if (message.getLinkTitle() != null) {
+                linkVH.linkTitle.setText(message.getLinkTitle());
+            } else {
+                linkVH.linkTitle.setVisibility(View.GONE);
+            }
+            if (message.getLinkDescription() != null) {
+                linkVH.linkDescription.setText(message.getLinkDescription());
+            } else {
+                linkVH.linkDescription.setVisibility(View.GONE);
+            }
+            if (message.getLinkVideo() != null) {
+
+            }
+            if (message.getLinkImage() != null) {
+                Log.d(TAG, "image url: " + message.getLinkImage());
+                if (getFormat(message.getLinkImage()).contains(".gif")) {
+                    Glide.with(context).asGif().load(message.getLinkImage())
+                            .apply(
+                                    new RequestOptions()
+                                            .transform(new RoundedCorners(8))
+                                            .placeholder(circularProgressDrawable)
+                                            .timeout(10000))
+                            .into(linkVH.linkImage);
+                } else {
+                    Glide.with(context).load(message.getLinkImage())
+                            .apply(
+                                    new RequestOptions()
+                                            .transform(new RoundedCorners(16))
+                                            .placeholder(circularProgressDrawable)
+                                            .timeout(10000))
+                            .into(linkVH.linkImage);
+                }
+
+            } else {
+                linkVH.linkImage.setVisibility(View.GONE);
+            }
+            if (message.getLinkUrl() != null) {
+                linkVH.richLink.setClickable(true);
+                linkVH.richLink.setOnClickListener(v -> {
+                    Intent i = new Intent(Intent.ACTION_VIEW);
+                    i.setData(Uri.parse(message.getLinkUrl()));
+                    context.startActivity(i);
+                });
+            }
+
+        } else {
+            //if them
+            linkVH.theirLayout.setVisibility(View.VISIBLE);
+            linkVH.myLayout.setVisibility(View.GONE);
+            linkVH.theirMessageTextView.setText(message.getMessage());
+            linkVH.userName.setText(message.getUserName());
+            if (message.getLinkTitle() != null) {
+                linkVH.theirLinkTitle.setText(message.getLinkTitle());
+            } else {
+                linkVH.theirLinkTitle.setVisibility(View.GONE);
+            }
+            if (message.getLinkDescription() != null) {
+                linkVH.theirLinkDescription.setText(message.getLinkDescription());
+            } else {
+                linkVH.theirLinkDescription.setVisibility(View.GONE);
+            }
+            if (message.getLinkVideo() != null) {
+
+            }
+            if (message.getLinkImage() != null) {
+                Log.d(TAG, "image url: " + message.getLinkImage());
+                if (getFormat(message.getLinkImage()).contains(".gif")) {
+                    Glide.with(context).asGif().load(message.getLinkImage())
+                            .apply(
+                                    new RequestOptions()
+                                            .transform(new RoundedCorners(16))
+                                            .placeholder(circularProgressDrawable)
+                                            .timeout(10000))
+                            .into(linkVH.theirLinkImage);
+                } else {
+                    Glide.with(context).load(message.getLinkImage())
+                            .apply(
+                                    new RequestOptions()
+                                            .transform(new RoundedCorners(16))
+                                            .placeholder(circularProgressDrawable)
+                                            .timeout(10000))
+                            .into(linkVH.theirLinkImage);
+                }
+
+            } else {
+                linkVH.theirLinkImage.setVisibility(View.GONE);
+            }
+            if (message.getLinkUrl() != null) {
+                linkVH.theirRichLink.setClickable(true);
+                linkVH.theirRichLink.setOnClickListener(v -> {
+                    Intent i = new Intent(Intent.ACTION_VIEW);
+                    i.setData(Uri.parse(message.getLinkUrl()));
+                    context.startActivity(i);
+                });
+            }
+        }
+    }
+
+    private void SetDefaultMessageFormat(@NonNull DefaultViewHolder viewHolder, int position, Message message) {
+        DefaultViewHolder defaulVH = viewHolder;
+        Log.d(TAG, "in bindViewholder case 0");
+        if (mData.get(position).getIsUser()) {
+            //if me
+            defaulVH.theirLayout.setVisibility(View.GONE);
+            defaulVH.myLayout.setVisibility(View.VISIBLE);
+            defaulVH.myMessageTextView.setText(message.getMessage());
+        } else {
+            //if them
+            defaulVH.theirLayout.setVisibility(View.VISIBLE);
+            defaulVH.myLayout.setVisibility(View.GONE);
+            defaulVH.theirMessageTextView.setText(message.getMessage());
+            defaulVH.userName.setText(message.getUserName());
+        }
     }
 
     private void setAnimation(View viewToAnimate, int position) {

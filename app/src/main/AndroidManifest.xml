@@ -19,7 +19,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
-        tools:ignore="AllowBackup,GoogleAppIndexingWarning">
+        tools:ignore="AllowBackup,GoogleAppIndexingWarning"
+        tools:replace="android:icon"
+        >
 
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
@@ -62,10 +64,17 @@
             </intent-filter>
         </activity>
         <activity android:name=".activities.SignupActivity" />
+
         <activity android:name=".activities.CreateGroupActivity" />
+
         <activity
             android:name=".activities.ChatActivity"
             android:theme="@style/LinkDumpDark" />
+
+        <activity
+            android:name=".activities.SettingsActivity"
+            android:theme="@style/LinkDumpDark"
+            />
 
         <!--<service android:name=".services.InstanceIdService">-->
         <!--<intent-filter>-->

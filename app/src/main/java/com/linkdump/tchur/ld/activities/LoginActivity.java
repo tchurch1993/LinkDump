@@ -69,9 +69,6 @@ public class LoginActivity extends AppCompatActivity {
 
 
 
-
-
-
         SharedPreferences prefs = getSharedPreferences("info", MODE_PRIVATE);
         loginViewCoordinator.editTextUsername.setText(prefs.getString("email", ""));
 
@@ -88,7 +85,7 @@ public class LoginActivity extends AppCompatActivity {
         loginViewCoordinator.buttonLogin.setOnClickListener(v -> login());
         loginViewCoordinator.googleSignInButton.setOnClickListener(v -> signIn());
 
-        AppConfig config = AppConfig.findById(AppConfig.class, 1L);
+       //AppConfig config = AppConfig.findById(AppConfig.class, 1L);
     }
 
     private void moveToSignUp() {

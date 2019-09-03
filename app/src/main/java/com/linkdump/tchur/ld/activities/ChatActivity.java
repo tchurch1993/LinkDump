@@ -88,6 +88,10 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
         currentGroup = intent.getStringExtra("groupID");
         groupName = intent.getStringExtra("groupName");
         groupRef = db.collection("groups").document(currentGroup);
+
+
+
+
         prefs = this.getSharedPreferences(
                 getPackageName(), MODE_PRIVATE);
 

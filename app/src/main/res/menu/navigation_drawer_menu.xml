@@ -8,6 +8,9 @@
             android:id="@+id/update"
             android:title="Update App" />
         <item
+            android:id="@+id/settings"
+            android:title="Settings" />
+        <item
             android:id="@+id/sign_out"
             android:title="Sign Out" />
     </group>
