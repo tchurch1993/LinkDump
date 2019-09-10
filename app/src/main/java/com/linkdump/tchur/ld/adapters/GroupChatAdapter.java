@@ -34,7 +34,8 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.View
 
 
     // data is passed into the constructor
-    public GroupChatAdapter(Context context, List<Message> data) {
+    public GroupChatAdapter(Context context, List<Message> data)
+    {
         this.mInflater = LayoutInflater.from(context);
         this.mData = data;
         this.context = context;
@@ -45,7 +46,8 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.View
 
     // inflates the row layout from xml when needed
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
+    {
         View view = mInflater.inflate(R.layout.my_message, parent, false);
         return new ViewHolder(view);
     }
@@ -55,7 +57,8 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.View
 
     // binds the data to the TextView in each row
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(ViewHolder holder, int position)
+    {
 
         Message message = mData.get(position);
         setAnimation(holder.itemView, position);
@@ -70,7 +73,13 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.View
             holder.theirMessageTextView.setText(message.getMessage());
             holder.userName.setText(message.getUserName());
         }
-    }  private void setAnimation(View viewToAnimate, int position){
+    }
+
+
+
+
+    private void setAnimation(View viewToAnimate, int position)
+    {
         if (position > lastPosition){
             Animation animation = AnimationUtils.loadAnimation(context, R.anim.item_animation_fall_down);
             viewToAnimate.startAnimation(animation);
@@ -99,6 +108,7 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.View
 
         ViewHolder(View itemView) {
             super(itemView);
+
             myMessageTextView = itemView.findViewById(R.id.my_message_body);
             theirMessageTextView = itemView.findViewById(R.id.their_message_body);
             userName = itemView.findViewById(R.id.their_name);

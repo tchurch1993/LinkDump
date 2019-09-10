@@ -9,13 +9,28 @@ import com.linkdump.tchur.ld.utils.MessageHistoryUtil;
 
 import java.io.IOException;
 
+
+
 /**
  * Created by tchurh on 12/19/2018.
  * Bow down to my greatness.
  */
-public class DeleteIntentBroadcastReceiver extends BroadcastReceiver {
+public class DeleteIntentBroadcastReceiver extends BroadcastReceiver
+{
+
+
+
     @Override
-    public void onReceive(Context context, Intent intent) {
+    public void onReceive(Context context, Intent intent)
+    {
+        deleteIntent(context, intent);
+    }
+
+
+
+
+
+    private void deleteIntent(Context context, Intent intent) {
         Log.d("demo", "in deleteIntent");
         try {
             MessageHistoryUtil.clearGroupHistory(context, intent.getStringExtra("groupId"));
@@ -23,4 +38,9 @@ public class DeleteIntentBroadcastReceiver extends BroadcastReceiver {
             e.printStackTrace();
         }
     }
+
+
+
+
+
 }

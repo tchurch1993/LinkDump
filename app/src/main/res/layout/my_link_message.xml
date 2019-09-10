@@ -8,7 +8,6 @@
 
     <RelativeLayout
         android:id="@+id/my_relative_layout"
-
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:clipToPadding="false"

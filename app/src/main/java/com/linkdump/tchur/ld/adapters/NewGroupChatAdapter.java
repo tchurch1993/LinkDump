@@ -46,12 +46,19 @@ public class NewGroupChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     private Context context;
     private int lastPosition = -1;
 
+
+
+
+
     // data is passed into the constructor
     public NewGroupChatAdapter(Context context, List<Message> data) {
         this.mInflater = LayoutInflater.from(context);
         this.mData = data;
         this.context = context;
     }
+
+
+
 
     // inflates the row layout from xml when needed
     @Override
@@ -93,6 +100,8 @@ public class NewGroupChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                 SetImageMessageType((ImageMessageViewHolder) viewHolder, position, message, circularProgressDrawable);
 
         }
+
+
 
 
     }
@@ -331,12 +340,34 @@ public class NewGroupChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         }
     }
 
+
+
+
+
+
+
+
+
+
     public class LinkMessageViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        TextView myMessageTextView, linkTitle, linkDescription;
-        TextView theirMessageTextView, theirLinkTitle, theirLinkDescription;
-        ImageView linkImage, theirLinkImage;
+
+
+        TextView myMessageTextView;
+        TextView linkTitle;
+        TextView linkDescription;
+        TextView theirMessageTextView;
+        TextView theirLinkTitle;
+        TextView theirLinkDescription;
+
+        ImageView linkImage;
+        ImageView theirLinkImage;
+
         TextView userName;
-        RelativeLayout theirLayout, myLayout, richLink, theirRichLink;
+
+        RelativeLayout theirLayout;
+        RelativeLayout myLayout;
+        RelativeLayout richLink;
+        RelativeLayout theirRichLink;
 
 
         LinkMessageViewHolder(View itemView) {
@@ -425,14 +456,22 @@ public class NewGroupChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         this.mClickListener = itemClickListener;
     }
 
+
+
     // parent activity will implement this method to respond to click events
     public interface ItemClickListener {
         void onItemClick(View view, int position);
     }
 
+
+
     private String getFormat(String url) {
         int formatBeginIndex = url.lastIndexOf(".");
-        String format = url.substring(formatBeginIndex, url.length());
+        String format = url.substring(formatBeginIndex);
         return format;
     }
+
+
+
+
 }

@@ -1,4 +1,4 @@
-package com.linkdump.tchur.ld.ui;
+package com.linkdump.tchur.ld.ui.views;
 
 import android.content.Context;
 import android.os.Bundle;
