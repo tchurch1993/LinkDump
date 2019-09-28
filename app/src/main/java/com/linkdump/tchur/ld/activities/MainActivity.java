@@ -23,9 +23,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.google.common.base.Preconditions;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.snapshot.Index;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -35,11 +33,7 @@ import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.adapters.GroupNameAdapter;
-import com.linkdump.tchur.ld.interfaces.DeleteIntentBroadCastReceiver;
 import com.linkdump.tchur.ld.utils.MessageHistoryUtil;
-import com.linkdump.tchur.ld.utils.Navigation;
-
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -74,7 +68,6 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
         clearNotifications();
 
 
-
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 //            // Create channel to show notifications.
 //            String channelId = "Group Chat";
@@ -84,6 +77,8 @@ public class MainActivity extends AppCompatActivity implements GroupNameAdapter.
 //            notificationManager.createNotificationChannel(new NotificationChannel(channelId,
 //                    channelName, NotificationManager.IMPORTANCE_HIGH));
 //        }
+
+
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);

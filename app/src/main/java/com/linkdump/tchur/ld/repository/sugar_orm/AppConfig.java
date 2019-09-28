@@ -4,9 +4,7 @@ import android.widget.Toast;
 
 import com.orm.SugarRecord;
 
-public class AppConfig extends SugarRecord<AppConfig> {
-
-
+public class AppConfig extends SugarRecord {
 
 
     private String title;
@@ -18,11 +16,9 @@ public class AppConfig extends SugarRecord<AppConfig> {
     private String foreGroundColor;
 
 
-
-    public AppConfig(){
+    public AppConfig() {
 
     }
-
 
 
     public String getTitle() {
@@ -80,7 +76,6 @@ public class AppConfig extends SugarRecord<AppConfig> {
     public void setForeGroundColor(String foreGroundColor) {
         this.foreGroundColor = foreGroundColor;
     }
-
 
 
 }

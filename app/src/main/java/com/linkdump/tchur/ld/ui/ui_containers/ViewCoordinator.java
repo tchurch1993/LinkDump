@@ -8,16 +8,12 @@ import android.view.View;
 import java.util.ArrayList;
 
 
-
-
-
-
 public abstract class ViewCoordinator {
 
 
-    ArrayList<View> viewRepo;
-    View rootView;
-    Context context;
+    private ArrayList<View> viewRepo;
+    private View rootView;
+    private Context context;
     AppCompatActivity appCompatActivity;
 
 
@@ -27,31 +23,17 @@ public abstract class ViewCoordinator {
     }
 
 
-    public ViewCoordinator initialiseViewFromXml(int xmlId) {
+    public void initialiseViewFromXml(int xmlId) {
         LayoutInflater inflater = LayoutInflater.from(context);
         rootView = inflater.inflate(xmlId, null);
         PostViewInit(rootView);
-        WireEvents(rootView,appCompatActivity);
-        return this;
+        WireEvents(rootView, appCompatActivity);
     }
 
-
-
-    /*
-
-      Abstracts , implemented in the constuctor
-
-     */
     public abstract void PostViewInit(View view);
+
     public abstract void WireEvents(View view, AppCompatActivity appCompatActivity);
 
-
-
-    /*
-
-        getters and setters
-
-     */
     public ArrayList<View> getViewRepo() {
         return viewRepo;
     }

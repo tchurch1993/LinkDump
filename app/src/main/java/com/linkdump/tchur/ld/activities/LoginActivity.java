@@ -22,7 +22,9 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.linkdump.tchur.ld.R;
+import com.linkdump.tchur.ld.concurrency.FutureBuilder;
 import com.linkdump.tchur.ld.repository.FirebaseDbContext;
+import com.linkdump.tchur.ld.repository.sugar_orm.AppConfig;
 import com.linkdump.tchur.ld.ui.ui_containers.LoginViewCoordinator;
 
 import java.util.HashMap;
@@ -36,34 +38,21 @@ public class LoginActivity extends AppCompatActivity {
     FirebaseDbContext firebaseDbContext;
     final String TAG = "Log";
 
-
-
-
-    /*
-
-
-
-
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         //setContentView(R.layout.activity_login);
         firebaseDbContext = new FirebaseDbContext();
+
         loginViewCoordinator = new LoginViewCoordinator(LoginActivity.this, this);
         loginViewCoordinator.initialiseViewFromXml(R.layout.activity_login);
         setContentView(loginViewCoordinator.getRootView());
+
         checkBuildVersion();
-
-
-
-
 
         SharedPreferences prefs = getSharedPreferences("info", MODE_PRIVATE);
         loginViewCoordinator.editTextUsername.setText(prefs.getString("email", ""));
-
-
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
@@ -75,11 +64,17 @@ public class LoginActivity extends AppCompatActivity {
         loginViewCoordinator.buttonSignUp.setOnClickListener(view -> moveToSignUp());
         loginViewCoordinator.buttonLogin.setOnClickListener(v -> login());
         loginViewCoordinator.googleSignInButton.setOnClickListener(v -> signIn());
+        String f = (String) FutureBuilder.factory().onComplete(() -> "string").getResult();
+        Log.i(f,"this worked");
+        Toast.makeText(this, f, Toast.LENGTH_SHORT).show();
 
-       //AppConfig config = AppConfig.findById(AppConfig.class, 1L);
+
+
+        AppConfig config = (AppConfig) FutureBuilder.factory().onComplete(() -> AppConfig.findById(AppConfig.class, 0L)).getResult();
     }
 
-    private void moveToSignUp() {
+    private void moveToSignUp()
+    {
         Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
         startActivity(intent);
         finish();
