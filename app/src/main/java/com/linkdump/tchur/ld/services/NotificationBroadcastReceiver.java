@@ -6,17 +6,14 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.app.Person;
-import android.support.v4.app.RemoteInput;
+
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.app.Person;
+import androidx.core.app.RemoteInput;
 import android.util.Log;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.linkdump.tchur.ld.R;
@@ -30,7 +27,6 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
-import static android.content.Context.NETWORK_STATS_SERVICE;
 import static com.linkdump.tchur.ld.services.MyFirebaseMessagingService.KEY_TEXT_REPLY;
 
 public class NotificationBroadcastReceiver extends BroadcastReceiver {
@@ -66,76 +62,71 @@ public class NotificationBroadcastReceiver extends BroadcastReceiver {
             PendingIntent defaultPendingIntent = PendingIntent.getActivity(context, intGroupReqCode /* Request code */, defaultIntent,
                     PendingIntent.FLAG_ONE_SHOT);
 
-            db.collection("users").document(userId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                    if (task.isSuccessful()) {
-                        String fullName;
-                        DocumentSnapshot userDoc = task.getResult();
-                        String firstName = userDoc.getString("firstName");
-                        String lastName = userDoc.getString("lastName");
-                        fullName = firstName + " " + lastName;
-                        data.put("userName", fullName);
-                        replyMessage.setUserName(fullName);
-                        try {
-                            MessageHistoryUtil.groupMessageNotificationHistory(context, groupId, replyMessage);
-                        } catch (IOException | ClassNotFoundException e) {
-                            e.printStackTrace();
-                        }
-                        Log.d("demo", groupId + "");
-                        db.collection("groups").document(groupId).collection("messages").add(data).addOnCompleteListener(new OnCompleteListener<DocumentReference>() {
-                            @Override
-                            public void onComplete(@NonNull Task<DocumentReference> task) {
-                                if (task.isSuccessful()) {
-                                    Person person = new Person.Builder().setName("Me").build();
-                                    NotificationCompat.MessagingStyle messagingStyle = new NotificationCompat.MessagingStyle(person);
-                                    try {
-                                        ArrayList<NotificationCompat.MessagingStyle.Message> messages = MessageHistoryUtil.convertToMessagesCompat(context, groupId);
+            db.collection("users").document(userId).get().addOnCompleteListener(task -> {
 
-                                        for (NotificationCompat.MessagingStyle.Message m : messages) {
-                                            messagingStyle.addMessage(m);
-                                        }
-                                    } catch (IOException | ClassNotFoundException e) {
-                                        e.printStackTrace();
-                                    }
-
-                                    Notification repliedNotification = new NotificationCompat.Builder(context, "Group Chat")
-                                            .setSmallIcon(R.drawable.ic_link_dump)
-                                            .setColor(context.getResources().getColor(R.color.colorPrimary, context.getTheme()))
-                                            .setContentText("Replied")
-                                            .setContentIntent(defaultPendingIntent)
-                                            .setDeleteIntent(deletePendingIntent)
-                                            .setStyle(messagingStyle)
-                                            .build();
-
-                                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-                                    notificationManager.notify(intGroupReqCode, repliedNotification);
-                                } else {
-                                    Notification repliedNotification = new NotificationCompat.Builder(context, "Group Chat")
-                                            .setSmallIcon(R.drawable.ic_link_dump)
-                                            .setColor(context.getResources().getColor(R.color.colorPrimary, context.getTheme()))
-                                            .setContentIntent(defaultPendingIntent)
-                                            .setDeleteIntent(deletePendingIntent)
-                                            .setContentText("Reply Failed")
-                                            .build();
-
-                                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-                                    notificationManager.notify(intGroupReqCode, repliedNotification);
-                                }
-                            }
-                        });
-                    } else {
-                        Notification repliedNotification = new NotificationCompat.Builder(context, "Group Chat")
-                                .setSmallIcon(R.drawable.ic_link_dump)
-                                .setColor(context.getResources().getColor(R.color.colorPrimary, context.getTheme()))
-                                .setContentIntent(defaultPendingIntent)
-                                .setDeleteIntent(deletePendingIntent)
-                                .setContentText("Reply Failed")
-                                .build();
-
-                        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-                        notificationManager.notify(intGroupReqCode, repliedNotification);
+                if (task.isSuccessful()) {
+                    String fullName;
+                    DocumentSnapshot userDoc = task.getResult();
+                    String firstName = userDoc.getString("firstName");
+                    String lastName = userDoc.getString("lastName");
+                    fullName = firstName + " " + lastName;
+                    data.put("userName", fullName);
+                    replyMessage.setUserName(fullName);
+                    try {
+                        MessageHistoryUtil.groupMessageNotificationHistory(context, groupId, replyMessage);
+                    } catch (IOException | ClassNotFoundException e) {
+                        e.printStackTrace();
                     }
+                    Log.d("demo", groupId + "");
+                    db.collection("groups").document(groupId).collection("messages").add(data).addOnCompleteListener(task1 -> {
+                        if (task1.isSuccessful()) {
+                            Person person = new Person.Builder().setName("Me").build();
+                            NotificationCompat.MessagingStyle messagingStyle = new NotificationCompat.MessagingStyle(person);
+                            try {
+                                ArrayList<NotificationCompat.MessagingStyle.Message> messages = MessageHistoryUtil.convertToMessagesCompat(context, groupId);
+
+                                for (NotificationCompat.MessagingStyle.Message m : messages) {
+                                    messagingStyle.addMessage(m);
+                                }
+                            } catch (IOException | ClassNotFoundException e) {
+                                e.printStackTrace();
+                            }
+
+                            Notification repliedNotification = new NotificationCompat.Builder(context, "Group Chat")
+                                    .setSmallIcon(R.drawable.ic_link_dump)
+                                    .setColor(context.getResources().getColor(R.color.colorPrimary, context.getTheme()))
+                                    .setContentText("Replied")
+                                    .setContentIntent(defaultPendingIntent)
+                                    .setDeleteIntent(deletePendingIntent)
+                                    .setStyle(messagingStyle)
+                                    .build();
+
+                            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+                            notificationManager.notify(intGroupReqCode, repliedNotification);
+                        } else {
+                            Notification repliedNotification = new NotificationCompat.Builder(context, "Group Chat")
+                                    .setSmallIcon(R.drawable.ic_link_dump)
+                                    .setColor(context.getResources().getColor(R.color.colorPrimary, context.getTheme()))
+                                    .setContentIntent(defaultPendingIntent)
+                                    .setDeleteIntent(deletePendingIntent)
+                                    .setContentText("Reply Failed")
+                                    .build();
+
+                            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+                            notificationManager.notify(intGroupReqCode, repliedNotification);
+                        }
+                    });
+                } else {
+                    Notification repliedNotification = new NotificationCompat.Builder(context, "Group Chat")
+                            .setSmallIcon(R.drawable.ic_link_dump)
+                            .setColor(context.getResources().getColor(R.color.colorPrimary, context.getTheme()))
+                            .setContentIntent(defaultPendingIntent)
+                            .setDeleteIntent(deletePendingIntent)
+                            .setContentText("Reply Failed")
+                            .build();
+
+                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+                    notificationManager.notify(intGroupReqCode, repliedNotification);
                 }
             });
 

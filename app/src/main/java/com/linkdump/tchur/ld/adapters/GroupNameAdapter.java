@@ -1,30 +1,47 @@
 package com.linkdump.tchur.ld.adapters;
 
 import android.content.Context;
-import android.support.v7.widget.RecyclerView;
+
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.linkdump.tchur.ld.R;
+import com.linkdump.tchur.ld.objects.GroupItem;
+import com.linkdump.tchur.ld.utils.GroupItemDiffCallback;
 
+import org.ocpsoft.prettytime.PrettyTime;
+
+import java.util.Calendar;
 import java.util.List;
 
 /**
- * Created by tchurh on 11/5/2018.
+ * Created by tchurch on 11/5/2018.
  * Bow down to my greatness.
  */
 public class GroupNameAdapter extends RecyclerView.Adapter<GroupNameAdapter.ViewHolder> {
 
-    private List<String> mData;
+    private List<GroupItem> groupItems;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
 
     // data is passed into the constructor
-    public GroupNameAdapter(Context context, List<String> data) {
+    public GroupNameAdapter(Context context, List<GroupItem> groupItems) {
         this.mInflater = LayoutInflater.from(context);
-        this.mData = data;
+        this.groupItems = groupItems;
+    }
+
+    public void updateGroupItemListItems(List<GroupItem> groupItems){
+        final GroupItemDiffCallback diffCallback = new GroupItemDiffCallback(this.groupItems, groupItems);
+        final DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffCallback);
+
+//        this.groupItems.clear();
+//        this.groupItems.addAll(groupItems);
+        diffResult.dispatchUpdatesTo(this);
     }
 
     // inflates the row layout from xml when needed
@@ -37,24 +54,36 @@ public class GroupNameAdapter extends RecyclerView.Adapter<GroupNameAdapter.View
     // binds the data to the TextView in each row
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        String event = mData.get(position);
-        holder.myTextView.setText(event);
+        GroupItem groupItem = groupItems.get(position);
+        PrettyTime p = new PrettyTime();
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(groupItem.getLastSentTime());
+        String prettyDate = p.format(c);
+        if (!groupItem.getLastMessageType().equals("IMAGE")){
+            holder.lastMessageTextView.setText(groupItem.getLastMessage());
+        } else {
+            holder.lastMessageTextView.setText("sent an image");
+        }
+        holder.myTextView.setText(groupItem.getGroupName());
+        holder.lastMessageSentTimeTextView.setText(prettyDate);
     }
 
     // total number of rows
     @Override
     public int getItemCount() {
-        return mData.size();
+        return groupItems.size();
     }
 
 
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        TextView myTextView;
+        TextView myTextView, lastMessageTextView, lastMessageSentTimeTextView;
 
         ViewHolder(View itemView) {
             super(itemView);
             myTextView = itemView.findViewById(R.id.groupNameTextView);
+            lastMessageTextView = itemView.findViewById(R.id.lastMessageTextView);
+            lastMessageSentTimeTextView = itemView.findViewById(R.id.lastMessageSentTimeTextView);
             itemView.setOnClickListener(this);
         }
 
@@ -65,8 +94,8 @@ public class GroupNameAdapter extends RecyclerView.Adapter<GroupNameAdapter.View
     }
 
     // convenience method for getting data at click position
-    public String getItem(int id) {
-        return mData.get(id);
+    public GroupItem getItem(int id) {
+        return groupItems.get(id);
     }
 
     // allows clicks events to be caught

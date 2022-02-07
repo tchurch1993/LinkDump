@@ -6,9 +6,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -46,7 +46,7 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+        setContentView(R.layout.activity_login_new);
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
@@ -74,11 +74,12 @@ public class LoginActivity extends AppCompatActivity {
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
-        findViewById(R.id.buttonSignup).setOnClickListener(view -> {
+        findViewById(R.id.fab).setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
             startActivity(intent);
             finish();
         });
+
 
         findViewById(R.id.buttonLogin).setOnClickListener(view -> {
             String email = editTextUsername.getText().toString();
@@ -118,12 +119,13 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        findViewById(R.id.googleSignInButton).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                signIn();
-            }
-        });
+        // TODO: implement google sign in
+//        findViewById(R.id.googleSignInButton).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                signIn();
+//            }
+//        });
 
 
     }
@@ -167,16 +169,16 @@ public class LoginActivity extends AppCompatActivity {
                                     .setDisplayName(acct.getDisplayName())
                                     .build();
                             Map<String, Object> mUser = new HashMap<>();
-                            if (acct.getGivenName() != null){
+                            if (acct.getGivenName() != null) {
                                 mUser.put("firstName", acct.getGivenName());
                             }
-                            if (acct.getFamilyName() != null){
+                            if (acct.getFamilyName() != null) {
                                 mUser.put("lastName", acct.getFamilyName());
                             }
-                            if (acct.getEmail() != null){
+                            if (acct.getEmail() != null) {
                                 mUser.put("email", acct.getEmail());
                             }
-                            if (acct.getPhotoUrl() != null){
+                            if (acct.getPhotoUrl() != null) {
                                 mUser.put("photoUrl", acct.getPhotoUrl());
                             }
                             db.collection("users").document(user.getUid())

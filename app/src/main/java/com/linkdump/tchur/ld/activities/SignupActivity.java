@@ -2,7 +2,7 @@ package com.linkdump.tchur.ld.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -22,18 +22,26 @@ public class SignupActivity extends AppCompatActivity {
     final String TAG = "demo";
 
     @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        Intent i = new Intent(SignupActivity.this, LoginActivity.class);
+        startActivity(i);
+        finish();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setTheme(R.style.LinkDumpDark);
-        setContentView(R.layout.activity_signup);
+        setContentView(R.layout.activity_signup_new);
         final FirebaseFirestore db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
 
         editTextEmail = findViewById(R.id.editTextEmail);
         editTextPassword = findViewById(R.id.editTextPassword);
         editTextPasswordConfirm = findViewById(R.id.editTextPasswordConfirm);
-        editTextFirstName = findViewById(R.id.editTextName);
-        editTextLastName = findViewById(R.id.editTextPhone);
+        editTextFirstName = findViewById(R.id.editTextFirstName);
+        editTextLastName = findViewById(R.id.editTextLastName);
 
 
         findViewById(R.id.buttonCancel).setOnClickListener(view -> {
@@ -94,7 +102,7 @@ public class SignupActivity extends AppCompatActivity {
                             } else {
                                 // If sign in fails, display a message to the user.
                                 Log.w(TAG, "signUpWithEmail:failure", task.getException());
-                                Toast.makeText(SignupActivity.this, "Authentication failed.",
+                                Toast.makeText(SignupActivity.this, task.getException().getMessage(),
                                         Toast.LENGTH_SHORT).show();
 
                             }
@@ -104,6 +112,7 @@ public class SignupActivity extends AppCompatActivity {
 
             }
         });
+
 
     }
 }

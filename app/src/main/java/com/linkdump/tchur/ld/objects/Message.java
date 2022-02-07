@@ -1,8 +1,9 @@
 package com.linkdump.tchur.ld.objects;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import java.io.Serializable;
+
 
 public class Message implements Comparable, Serializable {
     private String message, user, userName, messageType, imageUrl, linkImage, linkTitle, linkDescription, linkUrl, linkVideo;

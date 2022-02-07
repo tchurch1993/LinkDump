@@ -1,8 +1,8 @@
 package com.linkdump.tchur.ld.utils;
 
 import android.content.Context;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.Person;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.Person;
 import android.util.Log;
 
 import com.linkdump.tchur.ld.objects.Message;
@@ -21,7 +21,7 @@ import java.util.Collections;
  * Bow down to my greatness.
  */
 public final class MessageHistoryUtil {
-    private static String TAG = "MessageHistoryUtil";
+    private static final String TAG = "MessageHistoryUtil";
 
     private MessageHistoryUtil() {
     }
@@ -57,13 +57,11 @@ public final class MessageHistoryUtil {
                 Collections.sort(messages);
                 messages.remove(0);
             }
-            messages.add(message);
-            MessageHistoryUtil.writeMessages(context, groupId, messages);
         } else {
             Log.d(TAG, "writing messages");
-            messages.add(message);
-            MessageHistoryUtil.writeMessages(context, groupId, messages);
         }
+        messages.add(message);
+        MessageHistoryUtil.writeMessages(context, groupId, messages);
     }
 
     public static ArrayList<NotificationCompat.MessagingStyle.Message> convertToMessagesCompat(Context context, String groupId) throws IOException, ClassNotFoundException {

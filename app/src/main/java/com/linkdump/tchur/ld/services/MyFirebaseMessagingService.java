@@ -2,6 +2,7 @@
 
 package com.linkdump.tchur.ld.services;
 
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -12,14 +13,11 @@ import android.content.SharedPreferences;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.Person;
-import android.support.v4.app.RemoteInput;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.Person;
+import androidx.core.app.RemoteInput;
 import android.util.Log;
 
-import com.firebase.jobdispatcher.FirebaseJobDispatcher;
-import com.firebase.jobdispatcher.GooglePlayDriver;
-import com.firebase.jobdispatcher.Job;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
@@ -27,12 +25,14 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.linkdump.tchur.ld.R;
 import com.linkdump.tchur.ld.activities.MainActivity;
+import com.linkdump.tchur.ld.objects.GroupItem;
 import com.linkdump.tchur.ld.objects.Message;
 import com.linkdump.tchur.ld.utils.MessageHistoryUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -70,6 +70,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // [END_EXCLUDE]
 
         Log.d(TAG, "From: " + remoteMessage.getTo());
+        ActivityManager mngr = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        List<ActivityManager.RunningTaskInfo> tasklist = mngr.getRunningTasks(10);
         prefs = this.getSharedPreferences(
                 getPackageName(), MODE_PRIVATE);
 
@@ -88,6 +90,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     Log.d(TAG, "not showing notification cause in same group as notification");
                     return;
                 }
+            } else if (tasklist.get(0).topActivity.getClassName().equals("com.linkdump.tchur.ld.activities.MainActivity")) {
+                sendUpdateUIIntent(data);
+                return;
             }
             Log.d(TAG, data.get("senderId") + " : " + mAuth.getCurrentUser().getUid());
             if (data.get("click_action") != null && data.get("click_action").equals("UPDATE")) {
@@ -130,6 +135,34 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             return;
         }
         sendRegistrationToServer(token);
+    }
+
+    private void sendUpdateUIIntent(Map<String, String> data) {
+        String groupId = data.get("groupId");
+        String sentMessage = data.get("message");
+        String title = data.get("title");
+        String sender = data.get("sender");
+        Long sentTime = Long.parseLong(data.get("sentTime"));
+        if (sentMessage == null) {
+            sentMessage = "Sent an image";
+        }
+        Log.d("test", "mainactivity is top activity");
+        Intent updateIntent = new Intent("service.to.activity.transfer");
+        GroupItem updateGroupItem = new GroupItem();
+        updateGroupItem.setGroupId(groupId);
+        updateGroupItem.setLastMessage(sentMessage);
+        updateGroupItem.setLastSentTime(sentTime);
+        updateGroupItem.setUserName(sender);
+        if (sentMessage.equals("Sent an image")) {
+            updateGroupItem.setLastMessageType("IMAGE");
+        } else {
+            updateGroupItem.setLastMessageType("TEXT");
+        }
+        updateGroupItem.setGroupName(title);
+        updateIntent.putExtra("update", updateGroupItem);
+        Log.d("test", updateGroupItem.toString());
+        sendBroadcast(updateIntent);
+
     }
 
 
