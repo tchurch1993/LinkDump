@@ -17,12 +17,8 @@ jobs:
         uses: actions/checkout@v1
       - name: download Google Services Json
         run: curl ${{secrets.downloadURL}} --output "app/google-services.json"
-      - name: CD into APP
-        run: cd app
       - name: running LS
-        run: ls
-      - name: CD out of APP
-        run: cd ..
+        run: cd app; ls; cd ..
       - name: Setup JDK
         uses: actions/setup-java@v1
         with:
