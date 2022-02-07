@@ -15,10 +15,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v1
-      - name: running LS
-        run: ls
       - name: download Google Services Json
-        run: curl ${{secrets.downloadURL}} --output google-services.json
+        run: curl ${{secrets.downloadURL}} --output "app/google-services.json"
+      - name: CD into APP
+        run: cd app
+      - name: running LS
+        run: LS
+      - name: CD out of APP
+        run: cd ..
       - name: Setup JDK
         uses: actions/setup-java@v1
         with:
