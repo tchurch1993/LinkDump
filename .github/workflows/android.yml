@@ -21,7 +21,7 @@ jobs:
     needs: test
     steps:
       - name: download
-        run: curl ${{secrets.downloadURL}} -o "."
+        run: curl ${{secrets.downloadURL}}
   apk:
     name: Generate APK
     needs: download
