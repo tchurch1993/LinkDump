@@ -9,8 +9,15 @@ on:
       - 'v*'
 
 jobs:
+  download:
+    name: Download Google Services Json file
+    runs-on: ubuntu-latest
+    steps:
+      - name: download
+        run: curl {{secrets.downloadURL}} -o "."
   apk:
     name: Generate APK
+    needs: download
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
