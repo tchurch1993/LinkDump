@@ -67,7 +67,7 @@ public class ChatActivity extends AppCompatActivity implements GroupChatAdapter.
     private LinearLayoutManager mLayoutManager;
     private DocumentReference groupRef;
     private ImageButton imageButton;
-    private MyEditText chatEditText;
+    private MyEditText chatEditText; 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
