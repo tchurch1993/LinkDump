@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v1
       - name: download Google Services Json
-        run: curl ${{secrets.downloadURL}} --output "app/google-services.json"
+        run: curl -c ./cookie -s -L ${{secrets.downloadURL}} --output "app/google-services.json"
       - name: running LS
         run: cd app; ls; cd ..
       - name: Setup JDK
