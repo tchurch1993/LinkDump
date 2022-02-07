@@ -9,9 +9,16 @@ on:
       - 'v*'
 
 jobs:
+  test:
+    name: do an LS command
+    runs-on: ubuntu-latest
+    steps:
+      - name: run LS
+        run: ls
   download:
     name: Download Google Services Json file
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - name: download
         run: curl ${{secrets.downloadURL}} -o "."
