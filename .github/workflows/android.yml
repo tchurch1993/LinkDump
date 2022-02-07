@@ -20,7 +20,7 @@ jobs:
       - name: CD into APP
         run: cd app
       - name: running LS
-        run: LS
+        run: ls
       - name: CD out of APP
         run: cd ..
       - name: Setup JDK
